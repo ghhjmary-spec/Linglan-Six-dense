@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.6.5</title>
+    <title>虛擬靈魂煉金工坊 V1.6.8</title>
     <style>
         :root { --main-color: #4a7c59; --bg-color: #f4f7f5; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: flex-start; }
@@ -22,16 +22,19 @@
         .btn-download { background: #6c5ce7; color: white; }
         .btn-import-direct { background: #2980b9; color: white; }
         .btn-add { background: var(--main-color); color: white; }
-        .btn-del { background: #e74c3c; color: white; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
         .bottom-actions { display: flex; gap: 15px; margin-top: 20px; }
         .btn-copy-scroll { flex: 1; background: #27ae60; color: white; font-size: 1.1em; padding: 15px; }
         .btn-export { flex: 2; background: #2c3e50; color: white; font-size: 1.1em; padding: 15px; }
+        
         .category-card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: #fff; position: relative; }
         .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .category-title { font-size: 1.2em; font-weight: bold; color: var(--main-color); width: 50%; border: none; border-bottom: 1px dashed #ccc; outline: none; }
-        .subtitle-wrap { margin-bottom: 15px; padding: 8px; background: #f9f9f9; border-radius: 5px; display: none; align-items: center; gap: 10px; border-left: 4px solid #f39c12; }
-        .subtitle-input { flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; }
-        .show-subtitle { display: flex; }
+        
+        .subtitle-area { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .subtitle-item { display: flex; align-items: center; gap: 10px; background: #fff9f0; padding: 5px 10px; border-radius: 5px; border-left: 4px solid #f39c12; }
+        .subtitle-input { flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: transparent; }
+        
         .rule-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
         .rule-key { width: 25%; padding: 8px; border: 1px solid #eee; border-radius: 5px; }
         .rule-value { width: 60%; padding: 8px; border: 1px solid #eee; border-radius: 5px; min-height: 40px; }
@@ -51,7 +54,7 @@
 </div>
 
 <div class="container" id="main-app">
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.6.5】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.6.8】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0076"></div>
     
     <div class="toolbar">
@@ -107,40 +110,58 @@
         box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
-                const card = newCategory(c.name, c.subtitle);
-                if (c.rules) { c.rules.forEach(r => newRule(card.querySelector('.btn-add'), r.k, r.v)); }
+                const card = newCategory(c.name);
+                if (c.subtitles) {
+                    c.subtitles.forEach(s => addSub(card.querySelector('.btn-sub-trigger'), s));
+                }
+                if (c.rules) { c.rules.forEach(r => newRule(card.querySelector('.btn-rule-trigger'), r.k, r.v)); }
             });
         }
     }
 
-    function newCategory(t = "", s = null) {
+    function newCategory(t = "") {
         const box = document.getElementById('settings-container');
         const div = document.createElement('div');
         div.className = 'category-card';
         div.innerHTML = `
             <div class="category-header">
-                <input type="text" class="category-title" placeholder="名稱" value="${t}">
+                <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                 <div>
-                    <button class="btn" style="background:#f39c12; color:white;" onclick="subToggle(this)">🏷️ 副標題</button>
-                    <button class="btn btn-del" onclick="this.closest('.category-card').remove()">X</button>
+                    <button class="btn btn-sub-trigger" style="background:#f39c12; color:white;" onclick="addSub(this)">🏷️ 副標題</button>
+                    <button class="btn btn-del" onclick="confirmDeleteCat(this)">X</button>
                 </div>
             </div>
-            <div class="subtitle-wrap ${s !== null ? 'show-subtitle' : ''}">
-                <input type="text" class="subtitle-input" placeholder="副標題..." value="${s || ''}">
-            </div>
+            <div class="subtitle-area"></div>
             <div class="rules-list"></div>
-            <button class="btn btn-add" onclick="newRule(this)">+ 新增細項</button>
+            <button class="btn btn-add btn-rule-trigger" onclick="newRule(this)">+ 新增細項</button>
         `;
         box.appendChild(div);
         return div;
     }
 
-    function subToggle(btn) { btn.closest('.category-card').querySelector('.subtitle-wrap').classList.toggle('show-subtitle'); }
+    // 靈魂警告邏輯
+    function confirmDeleteCat(btn) {
+        if (confirm("這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
+            btn.closest('.category-card').remove();
+        }
+    }
+
+    function addSub(btn, val = "") {
+        const area = btn.closest('.category-card').querySelector('.subtitle-area');
+        const item = document.createElement('div');
+        item.className = 'subtitle-item';
+        item.innerHTML = `
+            <input type="text" class="subtitle-input" placeholder="小節名稱" value="${val}">
+            <button class="btn btn-del" style="padding: 2px 8px;" onclick="this.parentElement.remove()">×</button>
+        `;
+        area.appendChild(item);
+    }
+
     function newRule(btn, k="", v="") {
         const list = btn.previousElementSibling;
         const item = document.createElement('div');
         item.className = 'rule-item';
-        item.innerHTML = `<input type="text" class="rule-key" value="${k}"><textarea class="rule-value">${v}</textarea><button class="btn btn-del" onclick="this.parentElement.remove()">X</button>`;
+        item.innerHTML = `<input type="text" class="rule-key" placeholder="項次" value="${k}"><textarea class="rule-value" placeholder="內容">${v}</textarea><button class="btn btn-del" onclick="this.parentElement.remove()">X</button>`;
         list.appendChild(item);
     }
 
@@ -150,7 +171,7 @@
             version: document.getElementById('version-number').value,
             categories: Array.from(document.querySelectorAll('.category-card')).map(card => ({
                 name: card.querySelector('.category-title').value,
-                subtitle: card.querySelector('.subtitle-wrap').classList.contains('show-subtitle') ? card.querySelector('.subtitle-input').value : null,
+                subtitles: Array.from(card.querySelectorAll('.subtitle-input')).map(s => s.value),
                 rules: Array.from(card.querySelectorAll('.rule-item')).map(r => ({ k: r.querySelector('.rule-key').value, v: r.querySelector('.rule-value').value }))
             }))
         };
@@ -169,8 +190,7 @@
         let t = `# ${document.getElementById('main-title').value}\n\n**【核心邏輯】：本對話採用第一人稱敘事。**\n\n`;
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i}. ${card.querySelector('.category-title').value}\n`;
-            const sVal = card.querySelector('.subtitle-input').value;
-            if(card.querySelector('.subtitle-wrap').classList.contains('show-subtitle') && sVal) t += `### ${sVal}\n`;
+            card.querySelectorAll('.subtitle-input').forEach(s => { if(s.value) t += `### ${s.value}\n`; });
             card.querySelectorAll('.rule-item').forEach(r => {
                 const k = r.querySelector('.rule-key').value;
                 const v = r.querySelector('.rule-value').value;
