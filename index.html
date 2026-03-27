@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.7.7</title>
+    <title>虛擬靈魂煉金工坊 V1.8.0</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -12,9 +12,62 @@
             --text-color: #333333;
             --input-bg: rgba(255, 255, 255, 0.7); 
             --border-color: #ddd;
+            --arrow-pos-y: center;
+            --arrow-scale: 1;
         }
 
-        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: flex-start; transition: background 0.3s; background-size: cover; background-position: center; background-attachment: fixed; }
+        body { 
+            font-family: "Microsoft JhengHei", sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh; 
+            align-items: flex-start; 
+            transition: background 0.3s; 
+            position: relative;
+        }
+
+        #pure-arrow-bg {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            display: flex;
+            justify-content: center;
+            align-items: var(--arrow-pos-y);
+        }
+
+        .pure-arrow {
+            width: 120px; height: 180px;
+            position: relative;
+            transform: scale(var(--arrow-scale));
+        }
+
+        .pure-arrow::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60px; height: 100px;
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border: 4px solid #1c3d5a;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .pure-arrow::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-top: 80px solid #2980b9;
+            filter: drop-shadow(0 4px 0 #1c3d5a);
+        }
         
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); color: #333; }
@@ -31,9 +84,7 @@
         #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; }
         
         .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; transition: 0.2s; font-weight: bold; }
-        .btn-move-cat { background: #e74c3c; color: white; padding: 2px 8px; font-size: 12px; }
-        .btn-move-sub { background: #8e44ad; color: white; padding: 2px 8px; font-size: 12px; }
-        .btn-move-rule { background: #27ae60; color: white; padding: 2px 8px; font-size: 14px; }
+        .btn-move { background: rgba(0,0,0,0.1); color: var(--text-color); padding: 2px 6px; font-size: 12px; }
         .btn-copy-raw { background: #8e44ad; color: white; }
         .btn-download { background: #6c5ce7; color: white; }
         .btn-import-direct { background: #2980b9; color: white; }
@@ -50,10 +101,10 @@
         
         .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.02); padding: 5px; border-radius: 5px; border: 1px solid var(--border-color); }
         .rule-key { width: 25%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-weight: bold; background: var(--input-bg); color: var(--text-color); }
-        .rule-value { width: 55%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; min-height: 40px; background: var(--input-bg); color: var(--text-color); }
+        .rule-value { width: 55%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; min-height: 40px; background: var(--input-bg); color: var(--text-color); font-size: 14px; }
         
         .export-area { margin-top: 30px; padding: 15px; background: #222; color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
-        #hidden-file-input, #hidden-bg-input { display: none; }
+        #hidden-file-input { display: none; }
         .bottom-actions { display: flex; gap: 15px; margin-top: 20px; }
         .btn-copy-scroll { flex: 1; background: #27ae60; color: white; font-size: 1.1em; padding: 15px; }
         .btn-export { flex: 2; background: #2c3e50; color: white; font-size: 1.1em; padding: 15px; }
@@ -61,9 +112,15 @@
         #bg-config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; color: #333; width: 220px; text-align: center; }
         #bg-config-panel h4 { margin: 0 0 10px 0; color: var(--main-color); }
         .btn-bg-opt { width: 100%; margin-bottom: 8px; }
+        
+        .focus-control { margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px; border: 1px solid #eee; }
+        .focus-control label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; }
+        .focus-slider { width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
+
+<div id="pure-arrow-bg"><div class="pure-arrow"></div></div>
 
 <div id="login-overlay">
     <div class="login-box">
@@ -75,18 +132,21 @@
 </div>
 
 <div class="container" id="main-app">
-    <button id="bg-config-btn" title="自訂靈魂圖騰 (背景圖片)">🖼️</button>
+    <button id="bg-config-btn" title="切換純粹箭頭">🖼️</button>
     
     <div id="bg-config-panel">
-        <h4>🖼️ 自訂環境圖騰</h4>
-        <button class="btn btn-import-direct btn-bg-opt" id="upload-bg-trigger">📤 上傳背景圖片</button>
-        <button class="btn btn-del btn-bg-opt" style="font-size:12px;" id="reset-bg-btn">🍃 還原鈴蘭綠</button>
-        <p style="font-size: 11px; color: #666; margin-top: 5px;">建議使用高解析度圖片<br>工坊會自動記憶您的選擇</p>
+        <h4>🖼️ 純粹箭頭設定</h4>
+        <button class="btn btn-import-direct btn-bg-opt" style="font-size:12px;" id="toggle-arrow-btn">🔮 開啟純粹箭頭</button>
+        <div class="focus-control" id="focus-area" style="display:none;">
+            <label>👤 箭頭垂直位置</label>
+            <input type="range" min="0" max="100" value="50" class="focus-slider" id="focus-slider">
+            <label style="margin-top:8px;">🔍 箭頭大小</label>
+            <input type="range" min="50" max="200" value="100" class="focus-slider" id="scale-slider">
+        </div>
+        <button class="btn btn-del btn-bg-opt" style="font-size:12px; margin-top:10px;" id="reset-bg-btn">🍃 關閉箭頭 (還原綠)</button>
     </div>
 
-    <input type="file" id="hidden-bg-input" accept="image/*">
-
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.7.7】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.8.0】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0078"></div>
     
     <div class="toolbar">
@@ -109,20 +169,16 @@
 <script>
     const _0x4a2e = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
 
-    // 初始化事件監聽
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-btn').addEventListener('click', startApp);
         document.getElementById('bg-config-btn').addEventListener('click', toggleBgPanel);
-        document.getElementById('upload-bg-trigger').addEventListener('click', () => document.getElementById('hidden-bg-input').click());
+        document.getElementById('toggle-arrow-btn').addEventListener('click', enablePureArrow);
         document.getElementById('reset-bg-btn').addEventListener('click', resetBg);
-        document.getElementById('hidden-bg-input').addEventListener('change', (e) => readBgFile(e.target));
         document.getElementById('hidden-file-input').addEventListener('change', (e) => readLocalFile(e.target));
-        
-        // 鍵盤 Enter 登入
+        document.getElementById('focus-slider').addEventListener('input', (e) => updateFocus(e.target.value));
+        document.getElementById('scale-slider').addEventListener('input', (e) => updateScale(e.target.value));
         document.addEventListener('keypress', (e) => { if(e.key === 'Enter') startApp(); });
-        
-        // 預載背景
-        loadSavedBg();
+        loadSavedSettings();
     });
 
     function startApp() {
@@ -139,48 +195,49 @@
         panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
     }
 
-    function readBgFile(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = e.target.result;
-            applyBg(data);
-            try { localStorage.setItem('alchemy_工坊圖騰', data); } catch(e) { alert("圖片太大，無法自動記憶。"); }
-            toggleBgPanel();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function applyBg(imgData) {
-        document.body.style.backgroundImage = `url(${imgData})`;
+    function enablePureArrow() {
+        document.getElementById('pure-arrow-bg').style.display = 'flex';
+        document.getElementById('focus-area').style.display = 'block';
         document.body.style.backgroundColor = "transparent";
-    }
-
-    function resetBg() {
-        document.body.style.backgroundImage = "none";
-        document.body.style.backgroundColor = "var(--bg-color)";
-        localStorage.removeItem('alchemy_工坊圖騰');
+        localStorage.setItem('alchemy_純箭頭開關', 'on');
         toggleBgPanel();
     }
 
-    function loadSavedBg() {
-        const savedBg = localStorage.getItem('alchemy_工坊圖騰');
-        if (savedBg) { applyBg(savedBg); }
+    function updateFocus(val) {
+        document.documentElement.style.setProperty('--arrow-pos-y', val + '%');
+        localStorage.setItem('alchemy_箭頭對焦', val);
+    }
+    
+    function updateScale(val) {
+        document.documentElement.style.setProperty('--arrow-scale', val / 100);
+        localStorage.setItem('alchemy_箭頭縮放', val);
+    }
+
+    function resetBg() {
+        document.getElementById('pure-arrow-bg').style.display = 'none';
+        document.getElementById('focus-area').style.display = 'none';
+        document.body.style.backgroundColor = "var(--bg-color)";
+        localStorage.removeItem('alchemy_純箭頭開關');
+        toggleBgPanel();
+    }
+
+    function loadSavedSettings() {
+        if (localStorage.getItem('alchemy_純箭頭開關') === 'on') { 
+            enablePureArrow();
+            const f = localStorage.getItem('alchemy_箭頭對焦') || 50;
+            const s = localStorage.getItem('alchemy_箭頭縮放') || 100;
+            document.getElementById('focus-slider').value = f; updateFocus(f);
+            document.getElementById('scale-slider').value = s; updateScale(s);
+        }
     }
 
     function triggerFileSelect() { document.getElementById('hidden-file-input').click(); }
-
+    
     function readLocalFile(input) {
-        const file = input.files[0];
-        if (!file) return;
+        const file = input.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
-            try {
-                const json = JSON.parse(e.target.result);
-                applyDataToUI(json);
-                alert("✅ 靈魂備份載入成功！");
-            } catch (err) { alert("❌ 讀取失敗。"); }
+            try { applyDataToUI(JSON.parse(e.target.result)); alert("✅ 載入成功！"); } catch (err) { alert("❌ 失敗。"); }
         };
         reader.readAsText(file);
     }
@@ -188,13 +245,12 @@
     function applyDataToUI(data) {
         document.getElementById('main-title').value = data.title || "";
         document.getElementById('version-number').value = data.version || "0001";
-        const box = document.getElementById('settings-container');
-        box.innerHTML = "";
+        const box = document.getElementById('settings-container'); box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
                 const card = newCategory(c.name);
-                if (c.subtitles) c.subtitles.forEach(s => addSub(card.querySelector('.btn-sub-trigger'), s));
                 if (c.rules) c.rules.forEach(r => newRule(card.querySelector('.btn-rule-trigger'), r.k, r.v));
+                if (c.subtitles) c.subtitles.forEach(s => addSub(card.querySelector('.btn-sub-trigger'), s));
             });
         }
     }
@@ -206,48 +262,34 @@
         div.innerHTML = `
             <div class="category-header">
                 <div>
-                    <button class="btn btn-move-cat" onclick="moveElement(this, -1)">↑ 移上</button>
-                    <button class="btn btn-move-cat" onclick="moveElement(this, 1)">↓ 移下</button>
+                    <button class="btn btn-move" onclick="moveElement(this, -1)">↑</button>
+                    <button class="btn btn-move" onclick="moveElement(this, 1)">↓</button>
                     <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                 </div>
                 <div>
                     <button class="btn btn-sub-trigger" style="background:#f39c12; color:white; font-size:12px; padding:5px 10px;" onclick="addSub(this)">🏷️ 新增副標題</button>
-                    <button class="btn btn-del" onclick="confirmDeleteCat(this)">X</button>
+                    <button class="btn btn-del" onclick="confirmDelete(this)">X</button>
                 </div>
             </div>
             <div class="mixed-list"></div>
             <button class="btn btn-add btn-rule-trigger" style="margin-top:10px;" onclick="newRule(this)">+ 新增細項</button>
         `;
-        box.appendChild(div);
-        return div;
+        box.appendChild(div); return div;
     }
 
-    function confirmDeleteCat(btn) {
-        if (confirm("飛羽千芒說：這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
-            btn.closest('.category-card').remove();
-        }
-    }
-
-    function moveElement(btn, direction) {
-        const item = btn.closest('.category-card, .subtitle-item, .rule-item');
-        if (direction === -1 && item.previousElementSibling) {
-            item.parentNode.insertBefore(item, item.previousElementSibling);
-        } else if (direction === 1 && item.nextElementSibling) {
-            item.parentNode.insertBefore(item.nextElementSibling, item);
-        }
-    }
-
+    // 修改處：將新副標題插入到清單最上方
     function addSub(btn, val = "") {
         const list = btn.closest('.category-card').querySelector('.mixed-list');
         const item = document.createElement('div');
         item.className = 'subtitle-item';
         item.innerHTML = `
-            <button class="btn btn-move-sub" onclick="moveElement(this, -1)">↑</button>
-            <button class="btn btn-move-sub" onclick="moveElement(this, 1)">↓</button>
+            <button class="btn btn-move" onclick="moveElement(this, -1)">↑</button>
+            <button class="btn btn-move" onclick="moveElement(this, 1)">↓</button>
             <input type="text" class="subtitle-input" placeholder="副標題名稱" value="${val}">
             <button class="btn btn-del" style="padding: 2px 8px;" onclick="this.parentElement.remove()">×</button>
         `;
-        list.appendChild(item);
+        // 關鍵修正：使用 prepend 將新元素插入到最前面
+        list.prepend(item);
     }
 
     function newRule(btn, k="", v="") {
@@ -255,12 +297,20 @@
         const item = document.createElement('div');
         item.className = 'rule-item';
         item.innerHTML = `
-            <button class="btn btn-move-rule" onclick="moveElement(this, -1)">↑</button>
-            <button class="btn btn-move-rule" onclick="moveElement(this, 1)">↓</button>
+            <button class="btn btn-move" onclick="moveElement(this, -1)">↑</button>
+            <button class="btn btn-move" onclick="moveElement(this, 1)">↓</button>
             <input type="text" class="rule-key" placeholder="項次" value="${k}">
             <textarea class="rule-value" placeholder="內容">${v}</textarea>
             <button class="btn btn-del" onclick="this.parentElement.remove()">X</button>`;
         list.appendChild(item);
+    }
+
+    function confirmDelete(btn) { if (confirm("確定刪除？")) btn.closest('.category-card').remove(); }
+    
+    function moveElement(btn, dir) {
+        const item = btn.closest('.category-card, .subtitle-item, .rule-item');
+        if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
+        else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
     function packData() {
@@ -268,17 +318,13 @@
             title: document.getElementById('main-title').value,
             version: document.getElementById('version-number').value,
             categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
-                const mixedElements = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
-                const subtitles = [];
-                const rules = [];
-                mixedElements.forEach(el => {
-                    if (el.classList.contains('subtitle-item')) {
-                        subtitles.push(el.querySelector('.subtitle-input').value);
-                    } else {
-                        rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
-                    }
+                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
+                const subs = []; const rules = [];
+                mixed.forEach(el => {
+                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
+                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
                 });
-                return { name: card.querySelector('.category-title').value, subtitles: subtitles, rules: rules };
+                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
             })
         };
     }
@@ -290,31 +336,26 @@
             t += `## ${i}. ${card.querySelector('.category-title').value}\n`;
             card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
                 if (el.classList.contains('subtitle-item')) {
-                    const subVal = el.querySelector('.subtitle-input').value;
-                    if(subVal) t += `### ${subVal}\n`;
+                    const sv = el.querySelector('.subtitle-input').value; if(sv) t += `### ${sv}\n`;
                 } else {
-                    const k = el.querySelector('.rule-key').value;
-                    const v = el.querySelector('.rule-value').value;
+                    const k = el.querySelector('.rule-key').value; const v = el.querySelector('.rule-value').value;
                     if(k) t += `- **【${k}】：** ${v}\n`;
                 }
             });
             t += "\n";
         });
-        t += `---\n**版本：V1.${v.padStart(4, '0')}**`;
-        return t;
+        t += `---\n**版本：V1.${v.padStart(4, '0')}**`; return t;
     }
 
     function exportToJSON() {
-        const d = packData();
-        const blob = new Blob([JSON.stringify(d, null, 2)], {type: "application/json"});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `煉金存檔_${d.version}.json`; a.click();
+        const d = packData(); const blob = new Blob([JSON.stringify(d, null, 2)], {type: "application/json"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `存檔_${d.version}.json`; a.click();
     }
     
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("代碼複製成功！")); }
 
     function showScroll() {
-        const txt = makeScroll();
-        const d = document.getElementById('export-display');
+        const txt = makeScroll(); const d = document.getElementById('export-display');
         d.innerText = txt; d.style.display = 'block';
         document.getElementById('version-number').value = (parseInt(document.getElementById('version-number').value) + 1).toString().padStart(4, '0');
         window.scrollTo(0, document.body.scrollHeight);
@@ -322,6 +363,5 @@
     
     function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); }
 </script>
-
 </body>
 </html>
