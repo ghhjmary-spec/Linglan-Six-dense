@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.8.4</title>
+    <title>虛擬靈魂煉金工坊 V1.8.5</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -39,28 +39,29 @@
         .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent; }
         .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
         #version-number { width: 80px; padding: 3px; border: 1px solid var(--border-color); border-radius: 3px; background: var(--input-bg); }
+
+        /* 工具列回歸 */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
         
-        /* 移動按鈕樣式：完全移除背景，僅保留 Emoji */
+        /* 移動按鈕樣式 (Emoji 純符號) */
         .btn-emoji-move {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 22px; /* 預設大小 */
-            padding: 0 2px;
-            transition: transform 0.1s, opacity 0.2s;
+            transition: transform 0.1s;
             vertical-align: middle;
             line-height: 1;
         }
-        .btn-emoji-move:hover { transform: scale(1.3); opacity: 0.8; }
+        .btn-emoji-move:hover { transform: scale(1.3); }
         .btn-emoji-move:active { transform: scale(0.9); }
 
-        /* 層級大小區分 */
-        .cat-move { font-size: 28px; }   /* 大方向更大一點 */
-        .sub-move { font-size: 22px; }   /* 副標題適中 */
-        .rule-move { font-size: 18px; }  /* 細項最小 */
+        .cat-move { font-size: 28px; }
+        .sub-move { font-size: 22px; }
+        .rule-move { font-size: 18px; }
 
-        .btn-add { background: var(--main-color); color: white; cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; }
-        .btn-del { background: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; }
+        .btn-add { background: var(--main-color); color: white; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
         
         .category-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: var(--card-bg); position: relative; border-left: 8px solid var(--main-color); }
         .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
@@ -98,24 +99,31 @@
 <div class="container" id="main-app">
     <button id="bg-config-btn">🖼️</button>
     <div id="bg-config-panel">
-        <button class="btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
+        <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
         <div id="focus-area" style="display:none;">
-            <label style="font-size:12px;">👤 垂直對焦</label>
+            <label style="font-size:12px; font-weight:bold;">👤 垂直對焦</label>
             <input type="range" min="0" max="100" value="50" class="focus-slider" id="focus-slider">
         </div>
-        <button class="btn-del" style="width:100%; margin-top:10px;" id="reset-bg-btn">🍃 還原預設</button>
+        <button class="btn btn-del" style="width:100%; margin-top:10px;" id="reset-bg-btn">🍃 還原預設</button>
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.8.4】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0084"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.8.5】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0085"></div>
     
+    <div class="toolbar">
+        <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
+        <button class="btn" style="background:#6c5ce7; color:white;" onclick="exportToJSON()">💾 下載存檔</button>
+        <button class="btn" style="background:#2980b9; color:white;" onclick="triggerFileSelect()">📥 匯入 JSON</button>
+        <input type="file" id="hidden-file-input" style="display:none;" accept=".json">
+    </div>
+
     <div id="settings-container"></div>
-    <button class="btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增第一人稱敘事大方向</button>
+    <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增第一人稱敘事大方向</button>
     
     <div class="bottom-actions">
-        <button class="btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
-        <button class="btn-export" onclick="showScroll()">🔮 生成靈魂卷軸</button>
+        <button class="btn btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
+        <button class="btn btn-export" onclick="showScroll()">🔮 生成靈魂卷軸</button>
     </div>
     <div id="export-display" class="export-area"></div>
 </div>
@@ -149,6 +157,8 @@
             document.getElementById('focus-area').style.display = 'none';
         });
         
+        document.getElementById('hidden-file-input').addEventListener('change', (e) => readLocalFile(e.target));
+
         const savedBg = localStorage.getItem('alchemy_bg');
         if(savedBg) {
             document.body.style.backgroundImage = `url(${savedBg})`;
@@ -163,13 +173,37 @@
         } else { alert("驗證錯誤！"); }
     }
 
+    function triggerFileSelect() { document.getElementById('hidden-file-input').click(); }
+
+    function readLocalFile(input) {
+        const file = input.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try { applyDataToUI(JSON.parse(e.target.result)); alert("✅ 載入成功！"); } catch (err) { alert("❌ 格式錯誤。"); }
+        };
+        reader.readAsText(file);
+    }
+
+    function applyDataToUI(data) {
+        document.getElementById('main-title').value = data.title || "";
+        document.getElementById('version-number').value = data.version || "0085";
+        const box = document.getElementById('settings-container'); box.innerHTML = "";
+        if (data.categories) {
+            data.categories.forEach(c => {
+                const card = newCategory(c.name);
+                if (c.rules) c.rules.forEach(r => newRule(card.querySelector('.btn-add'), r.k, r.v));
+                if (c.subtitles) c.subtitles.forEach(s => addSub(card.querySelector('.btn-add'), s));
+            });
+        }
+    }
+
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    function newCategory() {
+    function newCategory(t = "") {
         const div = document.createElement('div');
         div.className = 'category-card';
         div.innerHTML = `
@@ -177,7 +211,7 @@
                 <div>
                     <button class="btn-emoji-move cat-move" onclick="moveElement(this, -1)">🔺</button>
                     <button class="btn-emoji-move cat-move" onclick="moveElement(this, 1)">🔻</button>
-                    <input type="text" class="category-title" placeholder="大方向名稱">
+                    <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                 </div>
                 <div>
                     <button class="btn-add" style="background:#f39c12; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
@@ -185,24 +219,25 @@
                 </div>
             </div>
             <div class="mixed-list"></div>
-            <button class="btn-add" style="margin-top:10px;" onclick="newRule(this)">+ 新增細項</button>
+            <button class="btn btn-add" style="margin-top:10px;" onclick="newRule(this)">+ 新增細項</button>
         `;
         document.getElementById('settings-container').appendChild(div);
+        return div;
     }
 
-    function addSub(btn) {
+    function addSub(btn, val = "") {
         const item = document.createElement('div');
         item.className = 'subtitle-item';
         item.innerHTML = `
             <button class="btn-emoji-move sub-move" onclick="moveElement(this, -1)">⬆️</button>
             <button class="btn-emoji-move sub-move" onclick="moveElement(this, 1)">⬇️</button>
-            <input type="text" class="subtitle-input" placeholder="副標題名稱">
+            <input type="text" class="subtitle-input" placeholder="副標題名稱" value="${val}">
             <button class="btn-del" style="padding:2px 8px;" onclick="this.parentElement.remove()">×</button>
         `;
         btn.closest('.category-card').querySelector('.mixed-list').prepend(item);
     }
 
-    function newRule(btn) {
+    function newRule(btn, k = "", v = "") {
         const item = document.createElement('div');
         item.className = 'rule-item';
         item.innerHTML = `
@@ -210,12 +245,34 @@
                 <button class="btn-emoji-move rule-move" onclick="moveElement(this, -1)">🔼</button>
                 <button class="btn-emoji-move rule-move" onclick="moveElement(this, 1)">🔽</button>
             </div>
-            <input type="text" class="rule-key" placeholder="項次">
-            <textarea class="rule-value" placeholder="內容"></textarea>
+            <input type="text" class="rule-key" placeholder="項次" value="${k}">
+            <textarea class="rule-value" placeholder="內容">${v}</textarea>
             <button class="btn-del" onclick="this.parentElement.remove()">X</button>
         `;
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
+
+    function packData() {
+        return {
+            title: document.getElementById('main-title').value,
+            version: document.getElementById('version-number').value,
+            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
+                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
+                const subs = []; const rules = [];
+                mixed.forEach(el => {
+                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
+                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
+                });
+                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
+            })
+        };
+    }
+
+    function exportToJSON() {
+        const d = packData(); const blob = new Blob([JSON.stringify(d, null, 2)], {type: "application/json"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `存檔_${d.version}.json`; a.click();
+    }
+    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
 
     function makeScroll() {
         let v = document.getElementById('version-number').value;
