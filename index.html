@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.9.4</title>
+    <title>虛擬靈魂煉金工坊 V1.9.6</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -31,6 +31,7 @@
         
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
+        .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
         .container { 
             background: rgba(255, 255, 255, var(--interface-opacity)); 
@@ -58,12 +59,13 @@
             background: rgba(255, 255, 255, calc(var(--interface-opacity) * 0.5));
             position: relative; border-left: 8px solid var(--main-color); 
         }
-        .category-header { display: flex; flex-direction: column; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; gap: 10px; }
+        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        /* 莊先生專屬寬度調製 */
         .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
         
-        .header-actions { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
+        .header-actions { display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; }
         .btn-import-fragment { background: #8e44ad; color: white; font-size: 12px; }
 
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
@@ -81,7 +83,6 @@
 
         #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; }
         .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -91,7 +92,7 @@
         <h2>🔒 安全驗證</h2>
         <input type="text" id="user" placeholder="帳號" autocomplete="off">
         <input type="password" id="pass" placeholder="密碼" autocomplete="off">
-        <button class="btn" style="width:100%; margin-top:10px; background:var(--main-color); color:white;" id="start-btn">解鎖進入</button>
+        <button class="btn-login" id="start-btn">解鎖進入</button>
     </div>
 </div>
 
@@ -101,11 +102,12 @@
         <h4>介面配置</h4>
         <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
         <input type="range" min="5" max="100" value="85" id="interface-opacity-slider" style="width:100%">
+        <button class="btn btn-del" style="width:100%; margin-top:10px; font-size:12px;" onclick="localStorage.removeItem('alchemy_bg'); location.reload();">還原背景</button>
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.4】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0094"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.6】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0096"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -148,6 +150,34 @@
         reader.readAsDataURL(file);
     });
 
+    // 核心匯入機制（檢查點：正確綁定 input 事件）
+    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                applyDataToUI(data);
+                alert("✅ 存檔匯入成功！");
+            } catch (err) { alert("❌ 讀取 JSON 失敗。"); }
+        };
+        reader.readAsText(file);
+    });
+
+    function applyDataToUI(data) {
+        document.getElementById('main-title').value = data.title || "";
+        document.getElementById('version-number').value = data.version || "0096";
+        const box = document.getElementById('settings-container'); box.innerHTML = "";
+        if (data.categories) {
+            data.categories.forEach(c => {
+                const card = newCategory(c.name);
+                const addBtn = card.querySelector('.btn-add');
+                if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
+                if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
+            });
+        }
+    }
+
     function newCategory(t = "") {
         const div = document.createElement('div');
         div.className = 'category-card';
@@ -170,42 +200,57 @@
     }
 
     function importSoulFragment(btn) {
-        const raw = prompt("請貼上與 Gemini 討論好的指令片段：\n(格式建議：第一行為副標題，其餘為內容)");
+        const raw = prompt("請貼上靈魂片段內容：");
         if (!raw) return;
-        
-        const lines = raw.split('\n');
-        const title = lines[0].trim();
-        const content = lines.slice(1).join('\n').trim();
-        
-        const card = btn.closest('.category-card');
-        const list = card.querySelector('.mixed-list');
-        
-        // 自動建立一副標題與一細項
-        addSub(btn, title);
-        newRule(btn, "核心邏輯", content);
-        alert("✅ 片段已成功注入！");
+        const sections = raw.split('\n');
+        sections.forEach(line => {
+            if (line.trim() === "") return;
+            const match = line.match(/【(.*?)】：(.*)/);
+            if (match) newRule(btn, match[1], match[2]);
+            else if (line.includes('一、') || line.includes('二、') || line.includes('三、') || line.includes('四、')) addSub(btn, line);
+            else newRule(btn, "補充", line);
+        });
+        alert("✅ 片段解析注入完成！");
     }
 
     function addSub(btn, val = "") {
         const item = document.createElement('div');
         item.className = 'subtitle-item';
-        item.innerHTML = `
-            <input type="text" class="subtitle-input" placeholder="副標題名稱" value="${val}">
-            <button class="btn-del" style="padding:2px 8px;" onclick="this.parentElement.remove()">×</button>
-        `;
+        item.innerHTML = `<input type="text" class="subtitle-input" value="${val}"><button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
 
     function newRule(btn, k = "", v = "") {
         const item = document.createElement('div');
         item.className = 'rule-item';
-        item.innerHTML = `
-            <input type="text" class="rule-key" placeholder="項次" value="${k}">
-            <textarea class="rule-value" placeholder="內容">${v}</textarea>
-            <button class="btn-del" onclick="this.parentElement.remove()">X</button>
-        `;
+        item.innerHTML = `<input type="text" class="rule-key" value="${k}"><textarea class="rule-value">${v}</textarea><button class="btn-del" onclick="this.parentElement.remove()">X</button>`;
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
+
+    function packData() {
+        return {
+            title: document.getElementById('main-title').value,
+            version: document.getElementById('version-number').value,
+            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
+                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
+                const subs = []; const rules = [];
+                mixed.forEach(el => {
+                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
+                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
+                });
+                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
+            })
+        };
+    }
+
+    function exportToJSON() { 
+        const d = packData(); 
+        const blob = new Blob([JSON.stringify(d, null, 2)], {type: "application/json"}); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
+        a.download = `存檔_V${d.version}.json`; a.click(); 
+    }
+
+    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
 
     function makeScroll() {
         let t = `# ${document.getElementById('main-title').value}\n\n`;
@@ -217,19 +262,22 @@
             });
             t += "\n";
         });
+        t += `---\n**版本：V1.${document.getElementById('version-number').value.padStart(4, '0')}**`;
         return t;
     }
 
     function showScroll() {
-        const txt = makeScroll();
         const d = document.getElementById('export-display');
-        d.innerText = txt; d.style.display = 'block';
+        d.innerText = makeScroll(); d.style.display = 'block';
+        document.getElementById('version-number').value = (parseInt(document.getElementById('version-number').value) + 1).toString().padStart(4, '0');
         window.scrollTo(0, document.body.scrollHeight);
     }
 
     function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); }
-    function exportToJSON() { /* 保持原有機制 */ }
-    function copyJSON() { /* 保持原有機制 */ }
+    
+    // 初始化
+    const savedBg = localStorage.getItem('alchemy_bg');
+    if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
 </script>
 </body>
 </html>
