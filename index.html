@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.6.8</title>
+    <title>虛擬靈魂煉金工坊 V1.6.9</title>
     <style>
         :root { --main-color: #4a7c59; --bg-color: #f4f7f5; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: flex-start; }
@@ -54,7 +54,7 @@
 </div>
 
 <div class="container" id="main-app">
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.6.8】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.6.9】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0076"></div>
     
     <div class="toolbar">
@@ -139,9 +139,9 @@
         return div;
     }
 
-    // 靈魂警告邏輯
+    // 飛羽千忙警告邏輯
     function confirmDeleteCat(btn) {
-        if (confirm("這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
+        if (confirm("飛羽千忙說：這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
             btn.closest('.category-card').remove();
         }
     }
