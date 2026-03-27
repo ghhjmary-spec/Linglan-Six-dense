@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.8.7</title>
+    <title>虛擬靈魂煉金工坊 V1.9.0</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -12,7 +12,7 @@
             --scroll-opacity: 0.9;    
             --text-color: #333333;
             --input-bg-base: 255, 255, 255; 
-            --border-color: #ddd;
+            --border-color: rgba(0,0,0,0.1);
         }
 
         body { 
@@ -32,9 +32,6 @@
         
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
-        .login-box h2 { color: var(--main-color); margin-bottom: 25px; font-weight: 900; }
-        .login-box input { width: 90%; padding: 12px; margin-bottom: 18px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; outline: none; }
-        .btn-login { background: var(--main-color); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
         
         .container { 
             background: rgba(255, 255, 255, var(--interface-opacity)); 
@@ -43,19 +40,18 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
             display: none; 
             position: relative; 
-            backdrop-filter: blur(2px); 
+            backdrop-filter: blur(3px); 
             transition: background 0.2s;
         }
         
         .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent; }
         .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
-        #version-number { width: 80px; padding: 3px; border: 1px solid var(--border-color); border-radius: 3px; background: rgba(var(--input-bg-base), 0.7); }
+        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; background: rgba(255,255,255, 0.5); }
 
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
         
         .btn-emoji-move { background: none; border: none; cursor: pointer; transition: transform 0.1s; vertical-align: middle; line-height: 1; }
         .btn-emoji-move:hover { transform: scale(1.3); }
-        .btn-emoji-move:active { transform: scale(0.9); }
         .cat-move { font-size: 28px; }
         .sub-move { font-size: 22px; }
         .rule-move { font-size: 18px; }
@@ -67,19 +63,26 @@
         .category-card { 
             border: 1px solid var(--border-color); 
             padding: 20px; border-radius: 10px; margin-bottom: 20px; 
-            background: rgba(255, 255, 255, calc(var(--interface-opacity) * 0.8));
+            background: rgba(255, 255, 255, calc(var(--interface-opacity) * 0.5));
             position: relative; border-left: 8px solid var(--main-color); 
         }
         .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 45%; border: none; outline: none; background: rgba(var(--input-bg-base), 0.7); padding: 5px; border-radius: 4px; }
         
+        .category-title, .subtitle-input, .rule-key, .rule-value {
+            background: rgba(255, 255, 255, calc(var(--interface-opacity) - 0.2)) !important;
+            border: 1px solid rgba(0,0,0,0.1) !important;
+            transition: background 0.2s;
+            outline: none;
+        }
+
+        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 45%; padding: 5px; border-radius: 4px; }
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
-        .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.1); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
-        .subtitle-input { flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-weight: bold; background: rgba(var(--input-bg-base), 0.7); }
+        .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
+        .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; }
         
-        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.02); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .rule-key { width: 20%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-weight: bold; background: rgba(var(--input-bg-base), 0.7); }
-        .rule-value { width: 55%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; min-height: 40px; background: rgba(var(--input-bg-base), 0.7); font-size: 14px; }
+        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
+        .rule-key { width: 22%; padding: 8px; border-radius: 5px; font-weight: bold; }
+        .rule-value { width: 55%; padding: 8px; border-radius: 5px; min-height: 40px; font-size: 14px; resize: vertical; }
         
         .export-area { 
             margin-top: 30px; padding: 15px; 
@@ -93,10 +96,8 @@
         .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-export { flex: 2; background: #2c3e50; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        /* 右上角唯一按鈕 */
         #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; }
 
-        /* 背景與透明度整合面板 */
         .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; color: #333; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
         .config-panel h4 { margin: 0 0 10px 0; color: var(--main-color); border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .slider-group { margin-top: 10px; padding: 8px; background: #f9f9f9; border-radius: 5px; border: 1px solid #eee; text-align: left; }
@@ -123,24 +124,21 @@
         <button class="btn btn-add" style="width:100%; margin-bottom:10px; background:#2980b9;" id="upload-bg-trigger">📤 上傳背景圖</button>
         
         <div class="slider-group" id="focus-area" style="display:none;">
-            <label>👤 垂直對焦 (靠上露臉)</label>
+            <label>👤 垂直對焦 (調整角色高度)</label>
             <input type="range" min="0" max="100" value="50" class="config-slider" id="focus-slider">
         </div>
 
         <div class="slider-group">
-            <label>👻 介面與卷軸透明度</label>
-            <input type="range" min="10" max="100" value="85" class="config-slider" id="interface-opacity-slider">
-            <div style="display:flex; justify-content:space-between; font-size:9px; color:#999; margin-top:2px;">
-                <span>透視</span><span>適中</span><span>實色</span>
-            </div>
+            <label>👻 全域透視度 (含輸入框)</label>
+            <input type="range" min="5" max="100" value="85" class="config-slider" id="interface-opacity-slider">
         </div>
 
-        <button class="btn btn-del" style="width:100%; margin-top:10px; font-size:12px;" id="reset-bg-btn">🍃 還原預設背景</button>
+        <button class="btn btn-del" style="width:100%; margin-top:10px; font-size:12px;" id="reset-bg-btn">🍃 還原背景</button>
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.8.7】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0087"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.0】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0090"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -164,30 +162,22 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-btn').addEventListener('click', startApp);
-        
-        // 面板開關
         document.getElementById('bg-config-btn').addEventListener('click', () => {
             const p = document.getElementById('bg-config-panel');
             p.style.display = p.style.display === 'block' ? 'none' : 'block';
         });
 
-        // 背景上傳
         document.getElementById('upload-bg-trigger').addEventListener('click', () => document.getElementById('hidden-bg-input').click());
         document.getElementById('hidden-bg-input').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                applyBg(ev.target.result);
-                localStorage.setItem('alchemy_bg', ev.target.result);
-            };
+            reader.onload = (ev) => { applyBg(ev.target.result); localStorage.setItem('alchemy_bg', ev.target.result); };
             reader.readAsDataURL(file);
         });
 
-        // 滑桿監聽
         document.getElementById('focus-slider').addEventListener('input', (e) => applyFocus(e.target.value));
         document.getElementById('interface-opacity-slider').addEventListener('input', (e) => applyOpacity(e.target.value));
 
-        // 還原背景
         document.getElementById('reset-bg-btn').addEventListener('click', () => {
             document.body.style.backgroundImage = 'none';
             localStorage.removeItem('alchemy_bg');
@@ -210,9 +200,8 @@
     
     function applyOpacity(val) {
         const interfaceVer = val / 100;
-        const scrollVer = Math.max(0.1, interfaceVer + 0.05); 
         document.documentElement.style.setProperty('--interface-opacity', interfaceVer);
-        document.documentElement.style.setProperty('--scroll-opacity', scrollVer);
+        document.documentElement.style.setProperty('--scroll-opacity', Math.max(0.1, interfaceVer));
         localStorage.setItem('alchemy_interface_opacity', val);
     }
 
@@ -229,7 +218,6 @@
         applyOpacity(savedOpacity);
     }
 
-    // ---核心邏輯保持 ---
     function triggerFileSelect() { document.getElementById('hidden-file-input').click(); }
     function readLocalFile(input) {
         const file = input.files[0]; if (!file) return;
@@ -242,7 +230,7 @@
 
     function applyDataToUI(data) {
         document.getElementById('main-title').value = data.title || "";
-        document.getElementById('version-number').value = data.version || "0087";
+        document.getElementById('version-number').value = data.version || "0090";
         const box = document.getElementById('settings-container'); box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
@@ -271,7 +259,7 @@
                 </div>
                 <div>
                     <button class="btn-add" style="background:#f39c12; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
-                    <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
+                    <button class="btn-del" onclick="safeDeleteCategory(this)">X</button>
                 </div>
             </div>
             <div class="mixed-list"></div>
@@ -279,6 +267,13 @@
         `;
         document.getElementById('settings-container').appendChild(div);
         return div;
+    }
+
+    // 莊先生專屬靈魂防護警語 (V1.9.0 更新)
+    function safeDeleteCategory(btn) {
+        if (confirm("⚠️ ⚠️ ⚠️ 會丟失大量靈魂片段⚠️ ⚠️ ⚠️")) {
+            btn.closest('.category-card').remove();
+        }
     }
 
     function addSub(btn, val = "") {
@@ -336,11 +331,8 @@
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i}. ${card.querySelector('.category-title').value}\n`;
             card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
-                if (el.classList.contains('subtitle-item')) {
-                    t += `### ${el.querySelector('.subtitle-input').value}\n`;
-                } else {
-                    t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
-                }
+                if (el.classList.contains('subtitle-item')) { t += `### ${el.querySelector('.subtitle-input').value}\n`; } 
+                else { t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`; }
             });
             t += "\n";
         });
