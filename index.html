@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.9.1</title>
+    <title>虛擬靈魂煉金工坊 V1.9.2</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -74,10 +74,9 @@
             transition: background 0.2s, box-shadow 0.2s;
             outline: none;
         }
-        .category-title:focus { box-shadow: 0 0 8px rgba(74, 124, 89, 0.3); }
 
-        /* 大方向標題寬度優化：擴張至 70% */
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 70%; padding: 8px; border-radius: 4px; }
+        /* 極限寬度優化：上調至 85% */
+        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; }
         
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
         .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
@@ -140,8 +139,8 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.1】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0091"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.2】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0092"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -233,7 +232,7 @@
 
     function applyDataToUI(data) {
         document.getElementById('main-title').value = data.title || "";
-        document.getElementById('version-number').value = data.version || "0091";
+        document.getElementById('version-number').value = data.version || "0092";
         const box = document.getElementById('settings-container'); box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
