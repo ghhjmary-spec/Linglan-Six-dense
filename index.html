@@ -307,28 +307,48 @@
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
 
     function makeScroll() {
-        let t = `# ${document.getElementById('main-title').value}\n\n`;
+        // 抓取當前的標題與版本號數字
+        const title = document.getElementById('main-title').value;
+        const verNum = document.getElementById('version-number').value.padStart(4, '0');
+        
+        let t = `# ${title}\n\n`;
+        
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i + 1}. ${card.querySelector('.category-title').value}\n`;
             card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
-                if (el.classList.contains('subtitle-item')) t += `### ${el.querySelector('.subtitle-input').value}\n`;
-                else t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
+                if (el.classList.contains('subtitle-item')) {
+                    t += `### ${el.querySelector('.subtitle-input').value}\n`;
+                } else {
+                    t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
+                }
             });
             t += "\n";
         });
-        t += `---\n**版本：V1.${document.getElementById('version-number').value.padStart(4, '0')}**`;
+        
+        // 關鍵修正：在版本號後方加上非數位標籤，阻斷 Gemini 編輯器的自動遞增邏輯
+        t += `---\n**版本：V1.${verNum} (V.Final)**`;
         return t;
     }
 
     function showScroll() {
-        document.getElementById('export-display').innerText = makeScroll(); 
+        // 1. 先產出帶有「正確當前版本號」的卷軸文字
+        const scrollContent = makeScroll();
+        document.getElementById('export-display').innerText = scrollContent; 
         document.getElementById('export-display').style.display = 'block';
-        document.getElementById('version-number').value = (parseInt(document.getElementById('version-number').value) + 1).toString().padStart(4, '0');
+        
+        // 2. 顯示完畢後，才將網頁上的版本輸入框數字 +1，方便您下次編輯
+        const currentVal = parseInt(document.getElementById('version-number').value);
+        document.getElementById('version-number').value = (currentVal + 1).toString().padStart(4, '0');
+        
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); }
+    function copyFinalScroll() { 
+        // 複製時會重新調用一次帶有抗干擾標籤的版本號
+        navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); 
+    }
     
+    // 背景圖片讀取
     const savedBg = localStorage.getItem('alchemy_bg');
     if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
 </script>
