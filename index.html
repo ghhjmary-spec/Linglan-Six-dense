@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.9.0</title>
+    <title>虛擬靈魂煉金工坊 V1.9.1</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -66,16 +66,19 @@
             background: rgba(255, 255, 255, calc(var(--interface-opacity) * 0.5));
             position: relative; border-left: 8px solid var(--main-color); 
         }
-        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; gap: 10px; }
         
         .category-title, .subtitle-input, .rule-key, .rule-value {
             background: rgba(255, 255, 255, calc(var(--interface-opacity) - 0.2)) !important;
             border: 1px solid rgba(0,0,0,0.1) !important;
-            transition: background 0.2s;
+            transition: background 0.2s, box-shadow 0.2s;
             outline: none;
         }
+        .category-title:focus { box-shadow: 0 0 8px rgba(74, 124, 89, 0.3); }
 
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 45%; padding: 5px; border-radius: 4px; }
+        /* 大方向標題寬度優化：擴張至 70% */
+        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 70%; padding: 8px; border-radius: 4px; }
+        
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
         .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
         .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; }
@@ -137,8 +140,8 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.0】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0090"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.9.1】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0091"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -230,7 +233,7 @@
 
     function applyDataToUI(data) {
         document.getElementById('main-title').value = data.title || "";
-        document.getElementById('version-number').value = data.version || "0090";
+        document.getElementById('version-number').value = data.version || "0091";
         const box = document.getElementById('settings-container'); box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
@@ -252,24 +255,23 @@
         div.className = 'category-card';
         div.innerHTML = `
             <div class="category-header">
-                <div>
+                <div style="flex:1; display:flex; align-items:center; gap:5px;">
                     <button class="btn-emoji-move cat-move" onclick="moveElement(this, -1)">🔺</button>
                     <button class="btn-emoji-move cat-move" onclick="moveElement(this, 1)">🔻</button>
                     <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                 </div>
-                <div>
-                    <button class="btn-add" style="background:#f39c12; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <button class="btn-add" style="background:#f39c12; font-size:12px; white-space:nowrap;" onclick="addSub(this)">🏷️ 副標題</button>
                     <button class="btn-del" onclick="safeDeleteCategory(this)">X</button>
                 </div>
             </div>
             <div class="mixed-list"></div>
-            <button class="btn btn-add" style="margin-top:10px;" onclick="newRule(this)">+ 新增細項</button>
+            <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="newRule(this)">+ 新增細項</button>
         `;
         document.getElementById('settings-container').appendChild(div);
         return div;
     }
 
-    // 莊先生專屬靈魂防護警語 (V1.9.0 更新)
     function safeDeleteCategory(btn) {
         if (confirm("⚠️ ⚠️ ⚠️ 會丟失大量靈魂片段⚠️ ⚠️ ⚠️")) {
             btn.closest('.category-card').remove();
