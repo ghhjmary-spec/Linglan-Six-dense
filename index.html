@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.0.2</title>
+    <title>虛擬靈魂煉金工坊 V2.0.3</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
             --bg-color: #f4f7f5; 
             --interface-opacity: 0.85; 
             --interface-blur: 10px;
+            --bg-pos-y: 50%;
             --text-color: #333333;
             --border-color: rgba(0,0,0,0.1);
         }
@@ -18,7 +19,7 @@
             font-family: "Microsoft JhengHei", sans-serif; 
             background-color: var(--bg-color); 
             background-size: cover; 
-            background-position: center center;
+            background-position: center var(--bg-pos-y);
             background-attachment: fixed; 
             background-repeat: no-repeat;
             color: var(--text-color); 
@@ -62,9 +63,7 @@
         }
         .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px;}
-        
         .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
-        
         .header-actions { display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; }
         .btn-import-fragment { background: #8e44ad; color: white; font-size: 12px; }
 
@@ -102,16 +101,22 @@
     <div class="config-panel" id="bg-config-panel">
         <h4>介面配置</h4>
         <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
-        <p style="font-size:12px; margin:5px 0;">透明度：</p>
+        
+        <p style="font-size:12px; margin:5px 0;">背景上下位移 (對焦頭像)：</p>
+        <input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%">
+        
+        <p style="font-size:12px; margin:10px 0 5px;">介面透明度：</p>
         <input type="range" min="10" max="100" value="85" id="interface-opacity-slider" style="width:100%">
-        <p style="font-size:12px; margin:5px 0;">背景對焦 (Blur)：</p>
+        
+        <p style="font-size:12px; margin:10px 0 5px;">霧化強度：</p>
         <input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%">
-        <button class="btn btn-del" style="width:100%; margin-top:10px; font-size:12px;" onclick="localStorage.removeItem('alchemy_bg'); location.reload();">還原背景</button>
+        
+        <button class="btn btn-del" style="width:100%; margin-top:15px; font-size:12px;" onclick="localStorage.removeItem('alchemy_bg'); location.reload();">還原背景</button>
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.2】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0102"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.3】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0103"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -139,13 +144,13 @@
             document.getElementById('main-app').style.display = 'block';
         } else { alert("驗證錯誤！"); }
     }
-
     document.getElementById('start-btn').addEventListener('click', startApp);
     
     const configBtn = document.getElementById('bg-config-btn');
     const configPanel = document.getElementById('bg-config-panel');
     const opacitySlider = document.getElementById('interface-opacity-slider');
     const blurSlider = document.getElementById('interface-blur-slider');
+    const bgPosSlider = document.getElementById('bg-pos-slider');
     const mainContainer = document.getElementById('main-app');
 
     configBtn.addEventListener('click', () => {
@@ -153,14 +158,18 @@
     });
 
     opacitySlider.addEventListener('input', (e) => {
-        const val = e.target.value / 100;
-        mainContainer.style.background = `rgba(255, 255, 255, ${val})`;
+        mainContainer.style.background = `rgba(255, 255, 255, ${e.target.value / 100})`;
     });
 
     blurSlider.addEventListener('input', (e) => {
         const val = e.target.value + "px";
         mainContainer.style.backdropFilter = `blur(${val})`;
         mainContainer.style.webkitBackdropFilter = `blur(${val})`;
+    });
+
+    // 關鍵新增：控制背景垂直位移
+    bgPosSlider.addEventListener('input', (e) => {
+        document.body.style.backgroundPositionY = e.target.value + "%";
     });
     
     document.getElementById('upload-bg-trigger').addEventListener('click', () => document.getElementById('hidden-bg-input').click());
@@ -195,7 +204,7 @@
 
     function applyDataToUI(data) {
         document.getElementById('main-title').value = data.title || "";
-        document.getElementById('version-number').value = data.version || "0102";
+        document.getElementById('version-number').value = data.version || "0103";
         const box = document.getElementById('settings-container'); box.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
