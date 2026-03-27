@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V1.6.9</title>
+    <title>虛擬靈魂煉金工坊 V1.7.3</title>
     <style>
         :root { --main-color: #4a7c59; --bg-color: #f4f7f5; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: flex-start; }
@@ -18,6 +18,7 @@
         #version-number { width: 80px; padding: 3px; border: 1px solid #ccc; border-radius: 3px; }
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: #eee; padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
         .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; transition: 0.2s; font-weight: bold; }
+        .btn-move { background: #95a5a6; color: white; padding: 2px 8px; font-size: 12px; margin: 0 2px; }
         .btn-copy-raw { background: #8e44ad; color: white; }
         .btn-download { background: #6c5ce7; color: white; }
         .btn-import-direct { background: #2980b9; color: white; }
@@ -27,17 +28,17 @@
         .btn-copy-scroll { flex: 1; background: #27ae60; color: white; font-size: 1.1em; padding: 15px; }
         .btn-export { flex: 2; background: #2c3e50; color: white; font-size: 1.1em; padding: 15px; }
         
-        .category-card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: #fff; position: relative; }
-        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .category-title { font-size: 1.2em; font-weight: bold; color: var(--main-color); width: 50%; border: none; border-bottom: 1px dashed #ccc; outline: none; }
+        .category-card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: #fff; position: relative; border-left: 6px solid var(--main-color); }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .category-title { font-size: 1.2em; font-weight: bold; color: var(--main-color); width: 45%; border: none; outline: none; background: #f9f9f9; padding: 5px; border-radius: 4px; }
         
         .subtitle-area { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-        .subtitle-item { display: flex; align-items: center; gap: 10px; background: #fff9f0; padding: 5px 10px; border-radius: 5px; border-left: 4px solid #f39c12; }
+        .subtitle-item { display: flex; align-items: center; gap: 5px; background: #fff9f0; padding: 5px 10px; border-radius: 5px; border-left: 4px solid #f39c12; }
         .subtitle-input { flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: transparent; }
         
-        .rule-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+        .rule-item { display: flex; gap: 5px; margin-bottom: 10px; align-items: flex-start; }
         .rule-key { width: 25%; padding: 8px; border: 1px solid #eee; border-radius: 5px; }
-        .rule-value { width: 60%; padding: 8px; border: 1px solid #eee; border-radius: 5px; min-height: 40px; }
+        .rule-value { width: 55%; padding: 8px; border: 1px solid #eee; border-radius: 5px; min-height: 40px; }
         .export-area { margin-top: 30px; padding: 15px; background: #222; color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
         #hidden-file-input { display: none; }
     </style>
@@ -54,8 +55,8 @@
 </div>
 
 <div class="container" id="main-app">
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.6.9】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0076"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V1.7.3】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0078"></div>
     
     <div class="toolbar">
         <button class="btn btn-copy-raw" onclick="copyJSON()">📋 複製代碼</button>
@@ -119,13 +120,18 @@
         }
     }
 
+    // 大方向卡片新增移動按鈕
     function newCategory(t = "") {
         const box = document.getElementById('settings-container');
         const div = document.createElement('div');
         div.className = 'category-card';
         div.innerHTML = `
             <div class="category-header">
-                <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
+                <div>
+                    <button class="btn btn-move" onclick="moveCard(this, -1)">↑ 移上</button>
+                    <button class="btn btn-move" onclick="moveCard(this, 1)">↓ 移下</button>
+                    <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
+                </div>
                 <div>
                     <button class="btn btn-sub-trigger" style="background:#f39c12; color:white;" onclick="addSub(this)">🏷️ 副標題</button>
                     <button class="btn btn-del" onclick="confirmDeleteCat(this)">X</button>
@@ -139,10 +145,29 @@
         return div;
     }
 
-    // 飛羽千忙警告邏輯
     function confirmDeleteCat(btn) {
-        if (confirm("飛羽千忙說：這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
+        if (confirm("飛羽千芒說：這會丟失大量靈魂片段 你確定要這樣做嗎?")) {
             btn.closest('.category-card').remove();
+        }
+    }
+
+    // 移動大方向卡片的邏輯
+    function moveCard(btn, direction) {
+        const card = btn.closest('.category-card');
+        if (direction === -1 && card.previousElementSibling) {
+            card.parentNode.insertBefore(card, card.previousElementSibling);
+        } else if (direction === 1 && card.nextElementSibling) {
+            card.parentNode.insertBefore(card.nextElementSibling, card);
+        }
+    }
+
+    // 通用的移動元素邏輯（用於副標題與細項）
+    function moveElement(btn, direction) {
+        const item = btn.parentElement;
+        if (direction === -1 && item.previousElementSibling) {
+            item.parentNode.insertBefore(item, item.previousElementSibling);
+        } else if (direction === 1 && item.nextElementSibling) {
+            item.parentNode.insertBefore(item.nextElementSibling, item);
         }
     }
 
@@ -151,6 +176,8 @@
         const item = document.createElement('div');
         item.className = 'subtitle-item';
         item.innerHTML = `
+            <button class="btn btn-move" onclick="moveElement(this, -1)">↑</button>
+            <button class="btn btn-move" onclick="moveElement(this, 1)">↓</button>
             <input type="text" class="subtitle-input" placeholder="小節名稱" value="${val}">
             <button class="btn btn-del" style="padding: 2px 8px;" onclick="this.parentElement.remove()">×</button>
         `;
@@ -161,7 +188,12 @@
         const list = btn.previousElementSibling;
         const item = document.createElement('div');
         item.className = 'rule-item';
-        item.innerHTML = `<input type="text" class="rule-key" placeholder="項次" value="${k}"><textarea class="rule-value" placeholder="內容">${v}</textarea><button class="btn btn-del" onclick="this.parentElement.remove()">X</button>`;
+        item.innerHTML = `
+            <button class="btn btn-move" onclick="moveElement(this, -1)">↑</button>
+            <button class="btn btn-move" onclick="moveElement(this, 1)">↓</button>
+            <input type="text" class="rule-key" placeholder="項次" value="${k}">
+            <textarea class="rule-value" placeholder="內容">${v}</textarea>
+            <button class="btn btn-del" onclick="this.parentElement.remove()">X</button>`;
         list.appendChild(item);
     }
 
