@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.1.3</title>
+    <title>虛擬靈魂煉金工坊 V2.1.4</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -30,11 +30,18 @@
             align-items: flex-start; 
         }
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 340px; border: 2px solid var(--main-color); }
-        .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* 踩地雷登入畫面 */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; overflow-y: auto; }
+        .login-box { background: white; padding: 25px; border-radius: 20px; text-align: center; width: 380px; border: 2px solid var(--main-color); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
         
-        /* 修正：將 background 改為 background-color 以確保透明度可控 */
+        /* 踩地雷樣式 */
+        .mines-grid { display: grid; grid-template-columns: repeat(9, 32px); grid-template-rows: repeat(9, 32px); gap: 2px; justify-content: center; margin: 15px 0; background: #bbb; padding: 5px; border: 3px inset #eee; }
+        .cell { width: 32px; height: 32px; background: #ccc; border: 3px outset #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; user-select: none; font-size: 14px; }
+        .cell.revealed { background: #ddd; border: 1px solid #999; cursor: default; }
+        .cell.mine { background: #e74c3c; }
+        .cell.flag { background: #f1c40f; }
+
+        /* 主程式對話框 - 確保變數生效 */
         .container { 
             background-color: rgba(255, 255, 255, var(--interface-opacity)); 
             width: 95%; max-width: 950px; padding: 30px; 
@@ -50,14 +57,10 @@
         .btn-add { background: var(--main-color); color: white; }
         .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
         
-        .category-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.4); border-left: 8px solid var(--main-color); }
-        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
-        
+        .category-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.4); border-left: 8px solid var(--main-color); position: relative; }
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
         .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
         .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ddd; }
-        
         .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
         .rule-key { width: 22%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-weight: bold; }
         .rule-value { width: 65%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-height: 60px; resize: vertical; }
@@ -71,9 +74,11 @@
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2>🔒 安全驗證</h2>
-        <input type="text" id="user" placeholder="帳號" autocomplete="off" style="width:80%; padding:8px; margin-bottom:5px;">
-        <input type="password" id="pass" placeholder="密碼" autocomplete="off" style="width:80%; padding:8px; margin-bottom:10px;">
+        <h3 style="margin:0;">🚩 煉金防護：9x9 踩地雷</h3>
+        <p style="font-size:12px; color:#666;">左鍵挖開，右鍵插旗。完成挑戰或直接登入。</p>
+        <div class="mines-grid" id="mines-board"></div>
+        <input type="text" id="user" placeholder="帳號" style="width:80%; padding:8px; margin-bottom:5px;">
+        <input type="password" id="pass" placeholder="密碼" style="width:80%; padding:8px; margin-bottom:10px;">
         <button class="btn-login" id="start-btn">解鎖進入工坊</button>
     </div>
 </div>
@@ -93,7 +98,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.3】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.4】">
     <div style="text-align:right; opacity:0.7;">版本：V1.<input type="number" id="version-number" value="0103" style="width:60px;"></div>
     
     <div class="toolbar">
@@ -114,6 +119,52 @@
 </div>
 
 <script>
+    // --- 1. 踩地雷邏輯 ---
+    const boardSize = 9, mineCount = 10;
+    let board = [], revealedCount = 0;
+    function initMines() {
+        const grid = document.getElementById('mines-board'); grid.innerHTML = '';
+        board = Array.from({length: boardSize}, () => Array(boardSize).fill(0));
+        let placed = 0;
+        while(placed < mineCount) {
+            let r = Math.floor(Math.random()*boardSize), c = Math.floor(Math.random()*boardSize);
+            if(board[r][c] !== 'M') { board[r][c] = 'M'; placed++; }
+        }
+        for(let r=0; r<boardSize; r++) {
+            for(let c=0; c<boardSize; c++) {
+                if(board[r][c] === 'M') continue;
+                let count = 0;
+                for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+                    if(r+i>=0 && r+i<boardSize && c+j>=0 && c+j<boardSize && board[r+i][c+j]==='M') count++;
+                }
+                board[r][c] = count;
+            }
+        }
+        for(let r=0; r<boardSize; r++) {
+            for(let c=0; c<boardSize; c++) {
+                const cell = document.createElement('div'); cell.className = 'cell';
+                cell.dataset.r = r; cell.dataset.c = c;
+                cell.onclick = () => reveal(r, c);
+                cell.oncontextmenu = (e) => { e.preventDefault(); cell.classList.toggle('flag'); };
+                grid.appendChild(cell);
+            }
+        }
+    }
+    function reveal(r, c) {
+        const grid = document.getElementById('mines-board');
+        const idx = r * boardSize + c; const el = grid.children[idx];
+        if(el.classList.contains('revealed') || el.classList.contains('flag')) return;
+        el.classList.add('revealed');
+        if(board[r][c] === 'M') { el.classList.add('mine'); el.innerText = '💣'; alert('碰！挑戰失敗，請重新整理頁面。'); return; }
+        el.innerText = board[r][c] === 0 ? '' : board[r][c];
+        if(board[r][c] === 0) {
+            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+                if(r+i>=0 && r+i<boardSize && c+j>=0 && c+j<boardSize) reveal(r+i, c+j);
+            }
+        }
+    }
+
+    // --- 2. 登入邏輯 ---
     const _0x4a2e = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').onclick = () => {
         if(btoa(document.getElementById('user').value)===_0x4a2e[0] && btoa(document.getElementById('pass').value)===_0x4a2e[1]) {
@@ -122,13 +173,11 @@
         } else alert("驗證錯誤！");
     };
 
-    const mainApp = document.getElementById('main-app');
+    // --- 3. 介面控制 (透明度修復) ---
     document.getElementById('bg-config-btn').onclick = () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
     };
-
-    // 透明度與霧化修正：直接修改 CSS 變數
     document.getElementById('interface-opacity-slider').oninput = (e) => {
         document.documentElement.style.setProperty('--interface-opacity', e.target.value / 100);
     };
@@ -138,7 +187,6 @@
     document.getElementById('bg-pos-slider').oninput = (e) => {
         document.body.style.backgroundPositionY = e.target.value + "%";
     };
-
     document.getElementById('upload-bg-trigger').onclick = () => document.getElementById('hidden-bg-input').click();
     document.getElementById('hidden-bg-input').onchange = (e) => {
         const r = new FileReader();
@@ -149,6 +197,7 @@
         r.readAsDataURL(e.target.files[0]);
     };
 
+    // --- 4. 編輯邏輯 ---
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
@@ -158,7 +207,7 @@
     function newCategory(t = "") {
         const div = document.createElement('div'); div.className = 'category-card';
         div.innerHTML = `
-            <div class="category-header">
+            <div class="category-header" style="border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
                     <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
@@ -187,7 +236,7 @@
         container.appendChild(div);
     }
 
-    // 核心匯入邏輯修正：確保 JSON 混合順序正確
+    // --- 5. JSON 匯入修復：確保順序重建 ---
     document.getElementById('hidden-file-input').onchange = (e) => {
         const r = new FileReader(); r.onload = (ev) => {
             try {
@@ -195,12 +244,9 @@
                 document.getElementById('main-title').value = d.title || "";
                 document.getElementById('version-number').value = d.version || "0103";
                 const box = document.getElementById('settings-container'); box.innerHTML = "";
-                
                 if(d.categories) d.categories.forEach(c => {
                     const card = newCategory(c.name);
                     const list = card.querySelector('.mixed-list');
-                    
-                    // 關鍵修復：如果存檔中有混合順序(items)，優先使用；若無則按舊格式讀取
                     if (c.items) {
                         c.items.forEach(item => {
                             if (item.type === 'sub') addSub(list, item.val);
@@ -218,28 +264,20 @@
 
     function packData() { 
         return { 
-            title: document.getElementById('main-title').value, 
-            version: document.getElementById('version-number').value, 
+            title: document.getElementById('main-title').value, version: document.getElementById('version-number').value, 
             categories: Array.from(document.querySelectorAll('.category-card')).map(card => { 
                 const list = card.querySelector('.mixed-list');
-                // 新增 items 陣列紀錄混合順序
                 const items = Array.from(list.children).map(el => {
                     if (el.classList.contains('subtitle-item')) return { type: 'sub', val: el.querySelector('.subtitle-input').value };
                     if (el.classList.contains('rule-item')) return { type: 'rule', k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value };
                 });
-                return { 
-                    name: card.querySelector('.category-title').value, 
-                    items: items, // 存入混合順序
-                    subtitles: items.filter(i=>i.type==='sub').map(i=>i.val), 
-                    rules: items.filter(i=>i.type==='rule').map(i=>({k:i.k, v:i.v})) 
-                }; 
+                return { name: card.querySelector('.category-title').value, items: items }; 
             }) 
         }; 
     }
 
     function exportToJSON() { const b=new Blob([JSON.stringify(packData(),null,2)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`存檔_V${document.getElementById('version-number').value}.json`; a.click(); }
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(()=>alert("JSON 已複製")); }
-    
     function makeScroll() { 
         let t=`# ${document.getElementById('main-title').value}\n\n`; 
         document.querySelectorAll('.category-card').forEach((card,i)=>{ 
@@ -247,13 +285,9 @@
             card.querySelector('.mixed-list').querySelectorAll('.subtitle-item, .rule-item').forEach(el=>{ 
                 if(el.classList.contains('subtitle-item')) t+=`### ${el.querySelector('.subtitle-input').value}\n`; 
                 else t+=`- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`; 
-            }); 
-            t+="\n"; 
-        }); 
-        t+=`---\n**版本：V1.${document.getElementById('version-number').value.padStart(4,'0')} (V.Final)**`;
-        return t; 
+            }); t+="\n"; 
+        }); return t; 
     }
-
     function showScroll() { document.getElementById('export-display').innerText=makeScroll(); document.getElementById('export-display').style.display='block'; window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'}); }
     function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(()=>alert("卷軸已複製")); }
 
@@ -272,6 +306,7 @@
 
     const savedBg = localStorage.getItem('alchemy_bg');
     if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
+    initMines();
 </script>
 </body>
 </html>
