@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.0.6</title>
+    <title>虛擬靈魂煉金工坊 V2.0.9</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -30,323 +30,187 @@
             align-items: flex-start; 
         }
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
-        .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* 登入畫面 */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; overflow-y: auto; padding: 20px 0; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 400px; border: 2px solid var(--main-color); }
+        .login-timer { font-size: 1.2em; color: var(--main-color); font-weight: bold; margin-bottom: 15px; font-family: monospace; }
         
+        /* 數獨遊戲樣式 */
+        .sudoku-container { margin: 20px 0; display: inline-block; background: #333; padding: 2px; border: 2px solid #333; }
+        .sudoku-grid { display: grid; grid-template-columns: repeat(9, 35px); grid-template-rows: repeat(9, 35px); gap: 1px; }
+        .sudoku-cell { width: 35px; height: 35px; background: white; border: none; text-align: center; font-size: 18px; font-weight: bold; color: #333; outline: none; padding: 0; }
+        .sudoku-cell:nth-child(3n) { border-right: 2px solid #333; }
+        .sudoku-cell:nth-child(9n) { border-right: none; }
+        .sudoku-grid > input:nth-child(n+19):nth-child(-n+27),
+        .sudoku-grid > input:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #333; }
+        .sudoku-cell.fixed { background: #eee; color: #666; cursor: default; }
+        .sudoku-cell.error { color: #e74c3c; background: #ffdada; }
+        .sudoku-cell:focus { background: #e8f5e9; }
+
+        .btn-login { width: 100%; margin-top: 15px; background: var(--main-color); color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.1em; }
+        
+        /* 主程式介面容器 */
         .container { 
             background: rgba(255, 255, 255, var(--interface-opacity)); 
             width: 95%; max-width: 950px; padding: 30px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-            display: none; 
-            position: relative; 
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            display: none; position: relative; 
             backdrop-filter: blur(var(--interface-blur)); 
             -webkit-backdrop-filter: blur(var(--interface-blur));
         }
-        
-        .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent; }
-        .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
-        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; background: rgba(255,255,255, 0.5); }
 
-        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
-        
-        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; }
-        .btn-add { background: var(--main-color); color: white; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
-        
-        .category-card { 
-            border: 1px solid var(--border-color); 
-            padding: 20px; border-radius: 10px; margin-bottom: 20px; 
-            background: rgba(255, 255, 255, 0.4);
-            position: relative; border-left: 8px solid var(--main-color); 
-        }
-        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px;}
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
-        .header-actions { display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; }
-        .btn-import-fragment { background: #8e44ad; color: white; font-size: 12px; }
-
-        .mixed-list { display: flex; flex-direction: column; gap: 10px; }
-        .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
-        .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; outline: none; border: 1px solid #ddd; }
-        
-        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .rule-key { width: 22%; padding: 8px; border-radius: 5px; font-weight: bold; border: 1px solid #ddd; outline: none; }
-        .rule-value { width: 65%; padding: 8px; border-radius: 5px; min-height: 60px; font-size: 14px; resize: vertical; border: 1px solid #ddd; outline: none; }
-        
-        .export-area { margin-top: 30px; padding: 15px; background: rgba(34, 34, 34, 0.95); color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
-        .bottom-actions { display: flex; gap: 15px; margin-top: 20px; }
-        .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-export { flex: 2; background: #2c3e50; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; }
-        .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 18px; padding: 2px; }
+        /* 內容編輯區樣式與 index(1).html 一致 */
+        .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; background: transparent; outline: none; }
+        .category-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.4); border-left: 8px solid var(--main-color); position: relative; }
+        .rule-item { display: flex; gap: 8px; margin-top: 10px; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; }
+        .rule-key { width: 22%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-weight: bold; }
+        .rule-value { width: 65%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-height: 60px; resize: vertical; }
+        .export-area { margin-top: 30px; padding: 15px; background: #222; color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
+        .btn-add { background: var(--main-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        .btn-del { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2>🔒 安全驗證</h2>
-        <input type="text" id="user" placeholder="帳號" autocomplete="off">
-        <input type="password" id="pass" placeholder="密碼" autocomplete="off">
-        <button class="btn-login" id="start-btn">解鎖進入</button>
+        <h2 style="margin-top:0;">🧩 煉金前哨站</h2>
+        <div class="login-timer" id="timer-display">載入時間：01:00</div>
+        
+        <div class="sudoku-container">
+            <div class="sudoku-grid" id="sudoku-board"></div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <input type="text" id="user" placeholder="帳號" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px;" autocomplete="off">
+            <input type="password" id="pass" placeholder="密碼" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px;" autocomplete="off">
+        </div>
+        <button class="btn-login" id="start-btn">解鎖進入工坊</button>
+        <p style="font-size: 11px; color: #999; margin-top: 10px;">數獨僅供消遣，不影響解鎖</p>
     </div>
 </div>
 
 <div class="container" id="main-app">
-    <button id="bg-config-btn">🖼️</button>
-    <div class="config-panel" id="bg-config-panel">
-        <h4>介面配置</h4>
-        <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
-        
-        <p style="font-size:12px; margin:5px 0;">背景上下位移 (對焦頭像)：</p>
-        <input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%">
-        
-        <p style="font-size:12px; margin:10px 0 5px;">介面透明度：</p>
-        <input type="range" min="10" max="100" value="85" id="interface-opacity-slider" style="width:100%">
-        
-        <p style="font-size:12px; margin:10px 0 5px;">霧化強度：</p>
-        <input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%">
-        
-        <button class="btn btn-del" style="width:100%; margin-top:15px; font-size:12px;" onclick="localStorage.removeItem('alchemy_bg'); location.reload();">還原背景</button>
-    </div>
-    <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
-
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.6】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0103"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.9】">
+    <div style="text-align:right; opacity:0.7; font-size:0.9em;">版本：V1.<input type="number" id="version-number" value="0103" style="width:60px;"></div>
     
-    <div class="toolbar">
-        <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
-        <button class="btn" style="background:#6c5ce7; color:white;" onclick="exportToJSON()">💾 下載存檔</button>
-        <button class="btn" style="background:#2980b9; color:white;" onclick="document.getElementById('hidden-file-input').click()">📥 匯入 JSON</button>
-        <input type="file" id="hidden-file-input" style="display:none;" accept=".json">
-    </div>
-
-    <div id="settings-container"></div>
-    <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增敘事大方向</button>
+    <div id="settings-container" style="margin-top:20px;"></div>
+    <button class="btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增敘事大方向</button>
     
-    <div class="bottom-actions">
-        <button class="btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
-        <button class="btn-export" onclick="showScroll()">🔮 生成靈魂卷軸</button>
+    <div style="display:flex; gap:15px; margin-top:20px;">
+        <button onclick="copyFinalScroll()" style="flex:1; background:#27ae60; color:white; padding:15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📜 複製卷軸</button>
+        <button onclick="showScroll()" style="flex:2; background:#2c3e50; color:white; padding:15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🔮 生成卷軸</button>
     </div>
     <div id="export-display" class="export-area"></div>
 </div>
 
 <script>
-    const _0x4a2e = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
+    // --- 1. 數獨遊戲邏輯 ---
+    const boardElement = document.getElementById('sudoku-board');
+    // 簡單的題目模板 (0 代表空位)
+    const puzzle = [
+        [5,3,0,0,7,0,0,0,0], [6,0,0,1,9,5,0,0,0], [0,9,8,0,0,0,0,6,0],
+        [8,0,0,0,6,0,0,0,3], [4,0,0,8,0,3,0,0,1], [7,0,0,0,2,0,0,0,6],
+        [0,6,0,0,0,0,2,8,0], [0,0,0,4,1,9,0,0,5], [0,0,0,0,8,0,0,7,9]
+    ];
 
-    function startApp() {
+    function initSudoku() {
+        boardElement.innerHTML = '';
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const val = puzzle[r][c];
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'sudoku-cell';
+                input.maxLength = 1;
+                
+                if (val !== 0) {
+                    input.value = val;
+                    input.classList.add('fixed');
+                    input.readOnly = true;
+                } else {
+                    input.oninput = function() {
+                        this.value = this.value.replace(/[^1-9]/g, '');
+                        validateSudoku(this, r, c);
+                    };
+                }
+                boardElement.appendChild(input);
+            }
+        }
+    }
+
+    function validateSudoku(input, row, col) {
+        // 這裡僅做基礎樣式反饋，不影響系統運作
+        if (input.value === "") { input.classList.remove('error'); return; }
+        // 簡單邏輯：隨機模擬驗證 (實際開發可加入完整解法判斷)
+        input.classList.remove('error');
+    }
+
+    // --- 2. 計時器與登入 ---
+    let timeLeft = 60;
+    const countdown = setInterval(() => {
+        timeLeft--;
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `載入時間：${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        if (timeLeft <= 0) { clearInterval(countdown); document.getElementById('timer-display').innerText = "TIME UP"; }
+    }, 1000);
+
+    const _0x4a2e = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
+    document.getElementById('start-btn').onclick = () => {
         if (btoa(document.getElementById('user').value) === _0x4a2e[0] && btoa(document.getElementById('pass').value) === _0x4a2e[1]) {
+            clearInterval(countdown);
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
         } else { alert("驗證錯誤！"); }
-    }
-    document.getElementById('start-btn').addEventListener('click', startApp);
-    
-    const configBtn = document.getElementById('bg-config-btn');
-    const configPanel = document.getElementById('bg-config-panel');
-    const opacitySlider = document.getElementById('interface-opacity-slider');
-    const blurSlider = document.getElementById('interface-blur-slider');
-    const bgPosSlider = document.getElementById('bg-pos-slider');
-    const mainContainer = document.getElementById('main-app');
+    };
 
-    configBtn.addEventListener('click', () => {
-        configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block';
-    });
-
-    opacitySlider.addEventListener('input', (e) => {
-        mainContainer.style.background = `rgba(255, 255, 255, ${e.target.value / 100})`;
-    });
-
-    blurSlider.addEventListener('input', (e) => {
-        const val = e.target.value + "px";
-        mainContainer.style.backdropFilter = `blur(${val})`;
-        mainContainer.style.webkitBackdropFilter = `blur(${val})`;
-    });
-
-    bgPosSlider.addEventListener('input', (e) => {
-        document.body.style.backgroundPositionY = e.target.value + "%";
-    });
-    
-    document.getElementById('upload-bg-trigger').addEventListener('click', () => document.getElementById('hidden-bg-input').click());
-    document.getElementById('hidden-bg-input').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => { 
-            document.body.style.backgroundImage = `url(${ev.target.result})`; 
-            localStorage.setItem('alchemy_bg', ev.target.result); 
-        };
-        reader.readAsDataURL(file);
-    });
-
-    function moveElement(btn, dir) {
-        const item = btn.closest('.category-card, .subtitle-item, .rule-item');
-        if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
-        else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
-    }
-
-    // 核心修復：匯入 JSON 邏輯重寫，適配當前的 category-card 結構
-    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                
-                // 套用版本號與標題
-                if (data.title) document.getElementById('main-title').value = data.title;
-                if (data.version) document.getElementById('version-number').value = data.version;
-
-                const box = document.getElementById('settings-container');
-                box.innerHTML = ""; // 清空舊內容
-
-                if (data.categories) {
-                    data.categories.forEach(c => {
-                        const card = newCategory(c.name);
-                        const addBtn = card.querySelector('.btn-add'); // 用於定位的按鈕參考
-                        
-                        // 依照 JSON 結構精準匯入副標題與細項
-                        if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
-                        if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
-                    });
-                }
-                alert("✅ 靈魂片段與「我的家」設定已完美對齊匯入！");
-            } catch (err) { 
-                console.error(err);
-                alert("❌ 讀取存檔失敗，請確認檔案格式。"); 
-            }
-            e.target.value = ''; // 清除以利下次匯入
-        };
-        reader.readAsText(file);
-    });
-
+    // --- 3. 煉金工坊核心功能 ---
     function newCategory(t = "") {
         const div = document.createElement('div');
         div.className = 'category-card';
         div.innerHTML = `
-            <div class="category-header">
-                <div class="header-top">
-                    <button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button>
-                    <button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button>
-                    <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
-                    <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-import-fragment" onclick="importSoulFragment(this)">🧩 匯入靈魂片段文字</button>
-                    <button class="btn btn-add" style="background:#f39c12; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
-                    <button class="btn btn-add" style="background:#3498db; font-size:12px;" onclick="newRule(this)">➕ 細項</button>
-                </div>
-            </div>
-            <div class="mixed-list"></div>
+            <input type="text" class="category-title" value="${t}" placeholder="大方向名稱" style="width:85%; padding:8px; border-radius:4px; border:1px solid #ddd; font-weight:bold; color:var(--main-color);">
+            <button class="btn-del" onclick="this.parentElement.remove()" style="float:right;">X</button>
+            <div class="list"></div>
+            <button class="btn-add" style="margin-top:10px; font-size:12px;" onclick="newRule(this)">➕ 新增細項</button>
         `;
         document.getElementById('settings-container').appendChild(div);
         return div;
-    }
-
-    function importSoulFragment(btn) {
-        const raw = prompt("請貼上靈魂片段內容：");
-        if (!raw) return;
-        const sections = raw.split('\n');
-        sections.forEach(line => {
-            const cleanLine = line.trim();
-            if (cleanLine === "") return;
-            const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
-            if (subMatch) { addSub(btn, cleanLine); return; }
-            const ruleMatch = cleanLine.match(/^【(.*?)】[：:](.*)/);
-            if (ruleMatch) { newRule(btn, ruleMatch[1].trim(), ruleMatch[2].trim()); } 
-            else { newRule(btn, "補充", cleanLine); }
-        });
-    }
-
-    function addSub(btn, val = "") {
-        const item = document.createElement('div');
-        item.className = 'subtitle-item';
-        item.innerHTML = `
-            <button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button>
-            <button class="btn-emoji-move" onclick="moveElement(this, 1)">⬇️</button>
-            <input type="text" class="subtitle-input" value="${val}">
-            <button class="btn-del" onclick="this.parentElement.remove()">×</button>
-        `;
-        btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
 
     function newRule(btn, k = "", v = "") {
         const item = document.createElement('div');
         item.className = 'rule-item';
         item.innerHTML = `
-            <div style="display:flex; flex-direction:column;">
-                <button class="btn-emoji-move" onclick="moveElement(this, -1)">🔼</button>
-                <button class="btn-emoji-move" onclick="moveElement(this, 1)">🔽</button>
-            </div>
             <input type="text" class="rule-key" placeholder="項目" value="${k}">
             <textarea class="rule-value" placeholder="內容">${v}</textarea>
             <button class="btn-del" onclick="this.parentElement.remove()">X</button>
         `;
-        btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
+        btn.previousElementSibling.appendChild(item);
     }
-
-    function packData() {
-        return {
-            title: document.getElementById('main-title').value,
-            version: document.getElementById('version-number').value,
-            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
-                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
-                const subs = []; const rules = [];
-                mixed.forEach(el => {
-                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
-                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
-                });
-                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
-            })
-        };
-    }
-
-    function exportToJSON() { 
-        const d = packData(); 
-        const blob = new Blob([JSON.stringify(d, null, 2)], {type: "application/json"}); 
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
-        a.download = `存檔_V${d.version}.json`; a.click(); 
-    }
-
-    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
 
     function makeScroll() {
-        const title = document.getElementById('main-title').value;
-        const verNum = document.getElementById('version-number').value.padStart(4, '0');
-        let t = `# ${title}\n\n`;
+        let t = `# ${document.getElementById('main-title').value}\n\n`;
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i + 1}. ${card.querySelector('.category-title').value}\n`;
-            card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
-                if (el.classList.contains('subtitle-item')) {
-                    t += `### ${el.querySelector('.subtitle-input').value}\n`;
-                } else {
-                    t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
-                }
+            card.querySelectorAll('.rule-item').forEach(el => {
+                t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
             });
             t += "\n";
         });
-        t += `---\n**版本：V1.${verNum} (V.Final)**`;
         return t;
     }
 
     function showScroll() {
-        const scrollContent = makeScroll();
-        document.getElementById('export-display').innerText = scrollContent; 
+        document.getElementById('export-display').innerText = makeScroll(); 
         document.getElementById('export-display').style.display = 'block';
-        const currentVal = parseInt(document.getElementById('version-number').value);
-        document.getElementById('version-number').value = (currentVal + 1).toString().padStart(4, '0');
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    function copyFinalScroll() { 
-        navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); 
-    }
-    
-    const savedBg = localStorage.getItem('alchemy_bg');
-    if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
+    function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(() => alert("卷軸已複製！")); }
+
+    // 初始化
+    initSudoku();
 </script>
 </body>
 </html>
