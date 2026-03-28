@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.0.9</title>
+    <title>虛擬靈魂煉金工坊 V2.1.0</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -106,7 +106,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.9】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.0】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
     
     <div class="toolbar">
@@ -127,7 +127,6 @@
 </div>
 
 <script>
-    // 驗證與介面邏輯
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
@@ -136,15 +135,43 @@
         } else { alert("驗證錯誤！"); }
     });
 
+    // --- 背景與介面配置邏輯 (修正重點) ---
+    const configPanel = document.getElementById('bg-config-panel');
+    const bgInput = document.getElementById('hidden-bg-input');
+    
+    // 開關面板
     document.getElementById('bg-config-btn').addEventListener('click', () => {
-        const p = document.getElementById('bg-config-panel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block';
     });
-    document.getElementById('interface-opacity-slider').addEventListener('input', (e) => document.getElementById('main-app').style.background = `rgba(255, 255, 255, ${e.target.value / 100})`);
-    document.getElementById('interface-blur-slider').addEventListener('input', (e) => document.getElementById('main-app').style.backdropFilter = `blur(${e.target.value}px)`);
-    document.getElementById('bg-pos-slider').addEventListener('input', (e) => document.body.style.backgroundPositionY = e.target.value + "%");
 
-    // 檔案上傳
+    // 觸發檔案選擇 (修正處)
+    document.getElementById('upload-bg-trigger').addEventListener('click', () => bgInput.click());
+
+    // 處理圖片上傳
+    bgInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.body.style.backgroundImage = `url('${event.target.result}')`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
+        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${e.target.value / 100})`;
+    });
+    document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
+        const val = e.target.value;
+        document.getElementById('main-app').style.backdropFilter = `blur(${val}px)`;
+        document.getElementById('main-app').style.webkitBackdropFilter = `blur(${val}px)`;
+    });
+    document.getElementById('bg-pos-slider').addEventListener('input', (e) => {
+        document.body.style.backgroundPositionY = e.target.value + "%";
+    });
+
+    // --- JSON 匯入邏輯 ---
     document.getElementById('import-json-trigger').addEventListener('click', () => document.getElementById('hidden-file-input').click());
     document.getElementById('hidden-file-input').addEventListener('change', (e) => {
         const file = e.target.files[0]; if (!file) return;
@@ -154,27 +181,27 @@
                 const data = JSON.parse(ev.target.result);
                 applyDataToUI(data);
                 alert("✅ 存檔匯入成功！");
-            } catch (err) { alert("❌ JSON 解析失敗，請檢查格式。"); }
+            } catch (err) { alert("❌ JSON 解析失敗！"); }
         };
         reader.readAsText(file);
     });
 
     function applyDataToUI(data) {
-        document.getElementById('main-title').value = data.title || "";
+        document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊】";
         document.getElementById('version-number').value = data.version || "0104";
         const container = document.getElementById('settings-container');
-        container.innerHTML = ""; // 清空舊內容
-
+        container.innerHTML = "";
         if (data.categories) {
             data.categories.forEach(c => {
                 const card = newCategory(c.name);
-                const addBtn = card.querySelector('.btn'); // 隨便抓個按鈕做參照物
+                const addBtn = card.querySelector('.btn');
                 if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
                 if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
             });
         }
     }
 
+    // --- 基礎組件邏輯 ---
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
@@ -205,28 +232,29 @@
     }
 
     function importSoulFragment(btn) {
-        const raw = prompt("請貼上靈魂片段內容：");
+        const raw = prompt("請貼上內容：");
         if (!raw) return;
         const lines = raw.split('\n');
         const card = btn.closest('.category-card');
         const titleInput = card.querySelector('.category-title');
-        let isFirstValidLine = true;
+        let isFirstLine = true;
 
         lines.forEach(line => {
-            const cleanLine = line.trim();
-            if (cleanLine === "") return;
-            if (isFirstValidLine) {
-                const isSub = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
-                if (!isSub) { titleInput.value = cleanLine; isFirstValidLine = false; return; }
+            const clean = line.trim();
+            if (!clean) return;
+            if (isFirstLine) {
+                if (!clean.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])/)) {
+                    titleInput.value = clean; isFirstLine = false; return;
+                }
             }
-            isFirstValidLine = false;
-            const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
-            if (subMatch) { addSub(btn, cleanLine); return; }
-            const colonMatch = cleanLine.match(/^([^：:，。]{1,30})[：:](.*)/);
-            if (colonMatch && !colonMatch[1].endsWith('如')) {
-                newRule(btn, colonMatch[1].trim(), colonMatch[2].trim());
+            isFirstLine = false;
+            const subMatch = clean.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
+            if (subMatch) { addSub(btn, clean); return; }
+            const colMatch = clean.match(/^([^：:，。]{1,30})[：:](.*)/);
+            if (colMatch && !colMatch[1].endsWith('如')) {
+                newRule(btn, colMatch[1].trim(), colMatch[2].trim());
             } else {
-                newRule(btn, "補充", cleanLine);
+                newRule(btn, "補充", clean);
             }
         });
     }
@@ -271,7 +299,8 @@
             });
             t += "\n";
         });
-        t += `---\n**版本：V1.${document.getElementById('version-number').value.padStart(4, '0')} (V.Final)**`;
+        const v = document.getElementById('version-number').value.padStart(4, '0');
+        t += `---\n**版本：V1.${v} (V.Final)**`;
         document.getElementById('export-display').innerText = t;
         document.getElementById('export-display').style.display = 'block';
     }
@@ -280,7 +309,7 @@
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
     function exportToJSON() { 
         const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Alchemy_Save.json`; a.click(); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Soul_Save.json`; a.click(); 
     }
 </script>
 </body>
