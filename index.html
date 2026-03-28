@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.1.0</title>
+    <title>虛擬靈魂煉金工坊 V2.1.6</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
             --bg-color: #f4f7f5; 
             --interface-opacity: 0.85; 
             --interface-blur: 10px;
+            --input-bg: rgba(255, 255, 255, 0.6); 
             --bg-pos-y: 50%;
             --text-color: #333333;
             --border-color: rgba(0,0,0,0.1);
@@ -45,9 +46,16 @@
             -webkit-backdrop-filter: blur(var(--interface-blur));
         }
         
-        .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent; }
+        input[type="text"], textarea {
+            background: var(--input-bg) !important;
+            backdrop-filter: blur(calc(var(--interface-blur) * 0.5));
+            -webkit-backdrop-filter: blur(calc(var(--interface-blur) * 0.5));
+            transition: background 0.3s ease;
+        }
+
+        .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent !important; }
         .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
-        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; background: rgba(255,255,255, 0.5); }
+        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; }
 
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
         
@@ -58,12 +66,12 @@
         .category-card { 
             border: 1px solid var(--border-color); 
             padding: 20px; border-radius: 10px; margin-bottom: 20px; 
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.3);
             position: relative; border-left: 8px solid var(--main-color); 
         }
         .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px;}
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
+        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; outline: none; }
         
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
         .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
@@ -99,14 +107,14 @@
         <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
         <p style="font-size:12px; margin:5px 0;">背景上下位移：</p>
         <input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%">
-        <p style="font-size:12px; margin:10px 0 5px;">介面透明度：</p>
+        <p style="font-size:12px; margin:10px 0 5px;">介面與輸入框透明度：</p>
         <input type="range" min="10" max="100" value="85" id="interface-opacity-slider" style="width:100%">
         <p style="font-size:12px; margin:10px 0 5px;">霧化強度：</p>
         <input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%">
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.0】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.6】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
     
     <div class="toolbar">
@@ -135,43 +143,42 @@
         } else { alert("驗證錯誤！"); }
     });
 
-    // --- 背景與介面配置邏輯 (修正重點) ---
-    const configPanel = document.getElementById('bg-config-panel');
     const bgInput = document.getElementById('hidden-bg-input');
-    
-    // 開關面板
     document.getElementById('bg-config-btn').addEventListener('click', () => {
-        configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block';
+        const p = document.getElementById('bg-config-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
     });
-
-    // 觸發檔案選擇 (修正處)
     document.getElementById('upload-bg-trigger').addEventListener('click', () => bgInput.click());
 
-    // 處理圖片上傳
     bgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                document.body.style.backgroundImage = `url('${event.target.result}')`;
+            reader.onload = (ev) => {
+                document.body.style.backgroundImage = `url('${ev.target.result}')`;
+                localStorage.setItem('alchemy_bg', ev.target.result);
             };
             reader.readAsDataURL(file);
         }
     });
 
     document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
-        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${e.target.value / 100})`;
+        const val = e.target.value / 100;
+        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${val})`;
+        document.documentElement.style.setProperty('--input-bg', `rgba(255, 255, 255, ${val * 0.7})`);
     });
+
     document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
         const val = e.target.value;
+        document.documentElement.style.setProperty('--interface-blur', `${val}px`);
         document.getElementById('main-app').style.backdropFilter = `blur(${val}px)`;
         document.getElementById('main-app').style.webkitBackdropFilter = `blur(${val}px)`;
     });
+
     document.getElementById('bg-pos-slider').addEventListener('input', (e) => {
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
-    // --- JSON 匯入邏輯 ---
     document.getElementById('import-json-trigger').addEventListener('click', () => document.getElementById('hidden-file-input').click());
     document.getElementById('hidden-file-input').addEventListener('change', (e) => {
         const file = e.target.files[0]; if (!file) return;
@@ -201,7 +208,6 @@
         }
     }
 
-    // --- 基礎組件邏輯 ---
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
@@ -238,7 +244,6 @@
         const card = btn.closest('.category-card');
         const titleInput = card.querySelector('.category-title');
         let isFirstLine = true;
-
         lines.forEach(line => {
             const clean = line.trim();
             if (!clean) return;
@@ -259,10 +264,17 @@
         });
     }
 
+    // --- 關鍵修正處：補齊副標題的向下移動鍵 ---
     function addSub(btn, val = "") {
         const item = document.createElement('div');
         item.className = 'subtitle-item';
-        item.innerHTML = `<button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button><input type="text" class="subtitle-input" value="${val}"><button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
+        item.innerHTML = `
+            <div style="display:flex; flex-direction:column;">
+                <button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button>
+                <button class="btn-emoji-move" onclick="moveElement(this, 1)">⬇️</button>
+            </div>
+            <input type="text" class="subtitle-input" value="${val}">
+            <button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
 
@@ -311,6 +323,9 @@
         const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Soul_Save.json`; a.click(); 
     }
+
+    const savedBg = localStorage.getItem('alchemy_bg');
+    if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
 </script>
 </body>
 </html>
