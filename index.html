@@ -116,7 +116,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.1】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.2】">
     <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
     
     <div class="toolbar">
@@ -160,7 +160,7 @@
         } else alert("冒險者驗證錯誤");
     });
 
-    // 背景調整與原有邏輯 (V2.2.2 原封不動)
+    // 背景調整與原有邏輯
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
@@ -189,13 +189,43 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
+    // JSON 匯入修復邏輯
+    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                // 開始代入網站
+                if (data.title) document.getElementById('main-title').value = data.title;
+                if (data.version) document.getElementById('version-number').value = data.version;
+                
+                const container = document.getElementById('settings-container');
+                container.innerHTML = ""; // 清空目前內容
+
+                data.categories.forEach(cat => {
+                    const card = newCategory(cat.name);
+                    cat.items.forEach(item => {
+                        if (item.type === 'sub') addSub(card, item.val);
+                        else if (item.type === 'rule') newRule(card, item.k, item.v);
+                    });
+                });
+                alert("🔮 靈魂記憶已成功載入！");
+            } catch (err) {
+                alert("❌ JSON 格式錯誤，無法讀取記憶。");
+            }
+        };
+        reader.readAsText(file);
+    });
+
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    // 核心解析器邏輯
+    // 解析器邏輯
     function importSoulFragment(card) {
         currentTargetCard = card;
         document.getElementById('import-modal').style.display = 'flex';
@@ -208,7 +238,6 @@
         const text = document.getElementById('import-text').value.trim();
         if(!text) return;
 
-        // 判斷是否執行原本的「自動生成」邏輯
         const cardTitle = currentTargetCard.querySelector('.category-title').value;
         if(text === "RANDOM" || (!text.includes("\n") && (cardTitle.includes("資資") || cardTitle.includes("徽章")))) {
              executeAutoRandom(currentTargetCard);
@@ -216,23 +245,19 @@
              return;
         }
 
-        // 執行結構化解析
         const lines = text.split('\n');
         lines.forEach((line, i) => {
             line = line.trim();
             if(!line) return;
 
-            // 1. 解析大方向 (如果第一行包含括號)
             if(i === 0 && (line.includes("{") || line.includes("大方向"))) {
                 const cleanT = line.replace(/[\{\}\(\)]/g, '').replace('大方向', '').trim();
                 currentTargetCard.querySelector('.category-title').value = cleanT;
             }
-            // 2. 解析副標 (國字數字開頭或標記副標)
             else if(line.match(/^[一二三四五六七八九十]/) || line.includes("副標")) {
                 const cleanSub = line.replace(/[\(\)副標]/g, '').trim();
                 addSub(currentTargetCard, cleanSub);
             }
-            // 3. 解析細項 (數字開頭)
             else if(line.match(/^\d+/) || line.includes("細項")) {
                 let parts = line.split(/[. 　]/);
                 let k = parts[1] || "細項";
@@ -251,12 +276,11 @@
             ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
         };
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        addSub(card, "血契認證：冒險者徽章數據 (即時鑑定)");
+        addSub(card, "血契認證：數據即時鑑定");
         const rhp = Math.floor(Math.random() * 70) + 80;
-        newRule(card, "HP (狀態)", `${rhp} / ${rhp} [完美穩定]`);
-        newRule(card, "MP (能量)", `${Math.floor(Math.random()*1500)+500} [充盈]`);
+        newRule(card, "HP (狀態)", `${rhp} / ${rhp}`);
         newRule(card, "屬性", `${pick(gen.prefix)}${pick(gen.core)} ${pick(gen.suffix)}`);
-        alert("🧩 鑑定存檔完成！數據已注入。");
+        alert("🧩 鑑定存檔完成！");
     }
 
     function newCategory(t = "") {
@@ -306,7 +330,6 @@
         list.appendChild(item);
     }
 
-    // 存檔與捲軸生成邏輯 (原封不動)
     function packData() {
         return {
             title: document.getElementById('main-title').value,
