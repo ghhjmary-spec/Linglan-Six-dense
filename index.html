@@ -239,19 +239,45 @@
         return div;
     }
 
-    function importSoulFragment(btn) {
-        const raw = prompt("請貼上靈魂片段內容（系統會自動識別【標籤】：內容）：");
-        if (!raw) return;
-        const sections = raw.split('\n');
-        sections.forEach(line => {
-            const cleanLine = line.trim();
-            if (cleanLine === "") return;
-            const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
-            if (subMatch) { addSub(btn, cleanLine); return; }
-            const ruleMatch = cleanLine.match(/^【(.*?)】[：:](.*)/);
-            if (ruleMatch) { newRule(btn, ruleMatch[1].trim(), ruleMatch[2].trim()); } 
-            else { newRule(btn, "補充", cleanLine); }
-        });
+    function importSoul() {
+        const fileInput = document.getElementById('import-file');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = JSON.parse(e.target.result);
+            const container = document.getElementById('card-container');
+            container.innerHTML = '';
+            document.getElementById('version-number').value = data.version || "0001";
+
+            data.categories.forEach(cat => {
+                addCard();
+                const cards = container.querySelectorAll('.card');
+                const lastCard = cards[cards.length - 1];
+                lastCard.querySelector('.card-title-input').value = cat.name;
+
+                cat.rules.forEach((rule, index) => {
+                    const ruleContainer = lastCard.querySelector('.rules-container');
+                    if (index > 0) {
+                        const newRule = document.createElement('div');
+                        newRule.className = 'rule-item';
+                        newRule.innerHTML = `
+                            <input type="text" class="rule-key" placeholder="標題">
+                            <textarea class="rule-value" placeholder="內容"></textarea>
+                            <button onclick="this.parentElement.remove()" style="background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; padding:2px 8px;">✕</button>
+                        `;
+                        ruleContainer.appendChild(newRule);
+                    }
+                    const ruleItems = lastCard.querySelectorAll('.rule-item');
+                    const targetItem = ruleItems[index];
+                    targetItem.querySelector('.rule-key').value = rule.k;
+                    targetItem.querySelector('.rule-value').value = rule.v;
+                });
+            });
+            alert("靈魂片段已完美匯入！");
+        };
+        reader.readAsText(file);
     }
 
     function addSub(btn, val = "") {
