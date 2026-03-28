@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.0.8</title>
+    <title>虛擬靈魂煉金工坊 V2.0.9</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -106,13 +106,13 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.8】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.9】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
         <button class="btn" style="background:#6c5ce7; color:white;" onclick="exportToJSON()">💾 下載存檔</button>
-        <button class="btn" style="background:#2980b9; color:white;" onclick="document.getElementById('hidden-file-input').click()">📥 匯入 JSON</button>
+        <button class="btn" style="background:#2980b9; color:white;" id="import-json-trigger">📥 匯入 JSON</button>
         <input type="file" id="hidden-file-input" style="display:none;" accept=".json">
     </div>
 
@@ -127,7 +127,7 @@
 </div>
 
 <script>
-    // 驗證邏輯
+    // 驗證與介面邏輯
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
@@ -136,12 +136,44 @@
         } else { alert("驗證錯誤！"); }
     });
 
-    // 介面背景控制
-    const configPanel = document.getElementById('bg-config-panel');
-    document.getElementById('bg-config-btn').addEventListener('click', () => configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block');
+    document.getElementById('bg-config-btn').addEventListener('click', () => {
+        const p = document.getElementById('bg-config-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    });
     document.getElementById('interface-opacity-slider').addEventListener('input', (e) => document.getElementById('main-app').style.background = `rgba(255, 255, 255, ${e.target.value / 100})`);
     document.getElementById('interface-blur-slider').addEventListener('input', (e) => document.getElementById('main-app').style.backdropFilter = `blur(${e.target.value}px)`);
     document.getElementById('bg-pos-slider').addEventListener('input', (e) => document.body.style.backgroundPositionY = e.target.value + "%");
+
+    // 檔案上傳
+    document.getElementById('import-json-trigger').addEventListener('click', () => document.getElementById('hidden-file-input').click());
+    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                applyDataToUI(data);
+                alert("✅ 存檔匯入成功！");
+            } catch (err) { alert("❌ JSON 解析失敗，請檢查格式。"); }
+        };
+        reader.readAsText(file);
+    });
+
+    function applyDataToUI(data) {
+        document.getElementById('main-title').value = data.title || "";
+        document.getElementById('version-number').value = data.version || "0104";
+        const container = document.getElementById('settings-container');
+        container.innerHTML = ""; // 清空舊內容
+
+        if (data.categories) {
+            data.categories.forEach(c => {
+                const card = newCategory(c.name);
+                const addBtn = card.querySelector('.btn'); // 隨便抓個按鈕做參照物
+                if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
+                if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
+            });
+        }
+    }
 
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
@@ -183,16 +215,13 @@
         lines.forEach(line => {
             const cleanLine = line.trim();
             if (cleanLine === "") return;
-
             if (isFirstValidLine) {
                 const isSub = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
                 if (!isSub) { titleInput.value = cleanLine; isFirstValidLine = false; return; }
             }
             isFirstValidLine = false;
-
             const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
             if (subMatch) { addSub(btn, cleanLine); return; }
-
             const colonMatch = cleanLine.match(/^([^：:，。]{1,30})[：:](.*)/);
             if (colonMatch && !colonMatch[1].endsWith('如')) {
                 newRule(btn, colonMatch[1].trim(), colonMatch[2].trim());
