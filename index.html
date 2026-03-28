@@ -239,45 +239,70 @@
         return div;
     }
 
-    function importSoul() {
+   function importSoul() {
         const fileInput = document.getElementById('import-file');
-        const file = fileInput.files[0];
-        if (!file) return;
+        // 先綁定讀取邏輯
+        fileInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = JSON.parse(e.target.result);
-            const container = document.getElementById('card-container');
-            container.innerHTML = '';
-            document.getElementById('version-number').value = data.version || "0001";
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    const container = document.getElementById('card-container');
+                    
+                    // 1. 清空目前畫面，避免舊資料干擾
+                    container.innerHTML = '';
 
-            data.categories.forEach(cat => {
-                addCard();
-                const cards = container.querySelectorAll('.card');
-                const lastCard = cards[cards.length - 1];
-                lastCard.querySelector('.card-title-input').value = cat.name;
-
-                cat.rules.forEach((rule, index) => {
-                    const ruleContainer = lastCard.querySelector('.rules-container');
-                    if (index > 0) {
-                        const newRule = document.createElement('div');
-                        newRule.className = 'rule-item';
-                        newRule.innerHTML = `
-                            <input type="text" class="rule-key" placeholder="標題">
-                            <textarea class="rule-value" placeholder="內容"></textarea>
-                            <button onclick="this.parentElement.remove()" style="background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; padding:2px 8px;">✕</button>
-                        `;
-                        ruleContainer.appendChild(newRule);
+                    // 2. 匯入版本號
+                    if (data.version) {
+                        document.getElementById('version-number').value = data.version;
                     }
-                    const ruleItems = lastCard.querySelectorAll('.rule-item');
-                    const targetItem = ruleItems[index];
-                    targetItem.querySelector('.rule-key').value = rule.k;
-                    targetItem.querySelector('.rule-value').value = rule.v;
-                });
-            });
-            alert("靈魂片段已完美匯入！");
+
+                    // 3. 核心對齊邏輯：根據 JSON 結構建立卡片
+                    data.categories.forEach(cat => {
+                        addCard(); // 呼叫新增卡片
+                        const cards = container.querySelectorAll('.card');
+                        const lastCard = cards[cards.length - 1];
+
+                        // 填入大類別標題 (大方向)
+                        lastCard.querySelector('.card-title-input').value = cat.name;
+
+                        // 4. 依照細項數量自動生成格子
+                        cat.rules.forEach((rule, index) => {
+                            const ruleContainer = lastCard.querySelector('.rules-container');
+                            
+                            // 第一個格子原本就有，後面的格子要自動長出來
+                            if (index > 0) {
+                                const newRule = document.createElement('div');
+                                newRule.className = 'rule-item';
+                                newRule.innerHTML = `
+                                    <input type="text" class="rule-key" placeholder="標題">
+                                    <textarea class="rule-value" placeholder="內容"></textarea>
+                                    <button onclick="this.parentElement.remove()" style="background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; padding:2px 8px;">✕</button>
+                                `;
+                                ruleContainer.appendChild(newRule);
+                            }
+
+                            // 精準填入 K 與 V
+                            const ruleItems = lastCard.querySelectorAll('.rule-item');
+                            const targetItem = ruleItems[index];
+                            targetItem.querySelector('.rule-key').value = rule.k || "";
+                            targetItem.querySelector('.rule-value').value = rule.v || "";
+                        });
+                    });
+                    alert("靈魂片段已完美對齊並匯入成功！");
+                } catch (err) {
+                    console.error("匯入出錯:", err);
+                    alert("匯入失敗，請檢查 JSON 格式。");
+                }
+                fileInput.value = ''; // 清空選擇器，讓同檔案可重複匯入
+            };
+            reader.readAsText(file);
         };
-        reader.readAsText(file);
+        // 觸發視窗
+        fileInput.click();
     }
 
     function addSub(btn, val = "") {
