@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.2.2</title>
+    <title>虛擬靈魂煉金工坊 V2.2.3</title>
     <style>
         :root { 
             --main-color: #27ae60; 
@@ -111,7 +111,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.2】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.3】">
     <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
     
     <div class="toolbar">
@@ -141,7 +141,7 @@
         } else alert("冒險者驗證錯誤");
     });
 
-    // 背景與 UI 調整
+    // 背景調整
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
@@ -182,7 +182,7 @@
         reader.onload = (ev) => {
             try {
                 const data = JSON.parse(ev.target.result);
-                document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊：V2.2.2】";
+                document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊：V2.2.3】";
                 document.getElementById('version-number').value = data.version || "0105";
                 const container = document.getElementById('settings-container');
                 container.innerHTML = "";
@@ -196,7 +196,6 @@
                             });
                         }
                     });
-                    alert("✅ 數據載入成功");
                 }
             } catch (err) { alert("❌ JSON 解析失敗"); }
         };
@@ -223,7 +222,7 @@
         return div;
     }
 
-    // --- 只保留：點擊彈出視窗顯示文字供複製 ---
+    // --- 徹底清除自動填空邏輯 ---
     function importSoulFragment(card) {
         const title = card.querySelector('.category-title').value;
         const gen = {
@@ -237,19 +236,18 @@
         let fragmentData = "";
         if(title.includes("資質") || title.includes("徽章") || title.includes("註冊")) {
             fragmentData = `[大方向]：${title}\n` +
-                            `[副標]：血契認證：冒險者徽章數據 (即時鑑定)\n` +
-                            `[細項-HP (狀態)]：${Math.floor(Math.random() * 70) + 80} / 80 [完美穩定]\n` +
-                            `[細項-屬性]：${pick(gen.prefix)}${pick(gen.core)} ${pick(gen.suffix)}\n` +
-                            `[細項-潛能]：${pick(gen.ranks)} ${pick(gen.prefix)}架構師`;
+                            `[副標]：血契認證：冒險者徽章數據\n` +
+                            `[細項-HP]：${Math.floor(Math.random() * 70) + 80} / 80\n` +
+                            `[細項-屬性]：${pick(gen.prefix)}${pick(gen.core)}\n` +
+                            `[細項-潛能]：${pick(gen.ranks)}`;
         } else {
-            fragmentData = `[大方向]：${title || "未定義領域"}\n` +
-                            `[副標]：AI 隨機演算片段\n` +
+            fragmentData = `[副標]：AI 隨機演算片段\n` +
                             `[細項-系統負載]：${(Math.random() * 100).toFixed(2)}%\n` +
-                            `[細項-核心邏輯]：優先執行沉浸式指令。`;
+                            `[細項-核心邏輯]：執行預設指令。`;
         }
 
-        // 彈出一個可供選取文字的提示框
-        prompt("🔮 片段已生成！\n您可以複製下方的內容後點擊確定：", fragmentData);
+        // 僅顯示彈窗，完全移除 addSub 或 newRule
+        prompt("🔮 生成成功！請手動複製內容：", fragmentData);
     }
 
     function addSub(card, val = "") {
@@ -277,7 +275,6 @@
             <button class="btn-del" onclick="this.parentElement.remove()">X</button>
         `;
         list.appendChild(item);
-        return item;
     }
 
     function packData() {
@@ -296,7 +293,7 @@
 
     function exportToJSON() { 
         const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
-        const a = document.createElement('a'); a.download = `Alchemy_Save_${Date.now()}.json`; a.href = URL.createObjectURL(blob); a.click(); 
+        const a = document.createElement('a'); a.download = `Alchemy_Save.json`; a.href = URL.createObjectURL(blob); a.click(); 
     }
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製")); }
 
