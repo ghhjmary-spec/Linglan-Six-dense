@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.2.6</title>
+    <title>虛擬靈魂煉金工坊 V2.2.2</title>
     <style>
         :root { 
             --main-color: #27ae60; 
@@ -111,7 +111,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.6】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.1】">
     <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
     
     <div class="toolbar">
@@ -141,7 +141,7 @@
         } else alert("冒險者驗證錯誤");
     });
 
-    // 背景調整
+    // 背景與 UI 調整
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
@@ -158,46 +158,103 @@
             reader.readAsDataURL(file);
         }
     });
+    document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
+        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${e.target.value / 100})`;
+    });
+    document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
+        const val = e.target.value + "px";
+        document.getElementById('main-app').style.backdropFilter = `blur(${val})`;
+        document.getElementById('main-app').style.webkitBackdropFilter = `blur(${val})`;
+    });
+    document.getElementById('bg-pos-slider').addEventListener('input', (e) => {
+        document.body.style.backgroundPositionY = e.target.value + "%";
+    });
 
+    // 排序功能
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    // --- 核心功能：匯入片段解析填空 ---
+    // 核心：JSON 匯入修復邏輯
+    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊：V2.2.1】";
+                document.getElementById('version-number').value = data.version || "0105";
+                const container = document.getElementById('settings-container');
+                container.innerHTML = "";
+                if (data.categories && Array.isArray(data.categories)) {
+                    data.categories.forEach(c => {
+                        const card = newCategory(c.name);
+                        if (c.items && Array.isArray(c.items)) {
+                            c.items.forEach(item => {
+                                if (item.type === 'sub') addSub(card, item.val);
+                                else newRule(card, item.k, item.v);
+                            });
+                        }
+                    });
+                    alert("✅ 冒險者數據已成功載入徽章！");
+                }
+            } catch (err) { alert("❌ JSON 解析失敗"); }
+        };
+        reader.readAsText(file);
+    });
+
+    // 修正後的 newCategory
+    function newCategory(t = "") {
+        const div = document.createElement('div');
+        div.className = 'category-card';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
+                <input type="text" class="category-title" value="${t}" placeholder="輸入大方向名稱...">
+                <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
+            </div>
+            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:5px;">
+                <button class="btn btn-import" onclick="importSoulFragment(this.closest('.category-card'))">🧩 匯入片段</button>
+                <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this.closest('.category-card'))">🏷️ 副標</button>
+                <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this.closest('.category-card'))">➕ 細項</button>
+            </div>
+            <div class="mixed-list"></div>
+        `;
+        document.getElementById('settings-container').appendChild(div);
+        return div;
+    }
+
+    // 動態隨機抽樣系統
     function importSoulFragment(card) {
-        // 彈出視窗讓使用者貼上文字
-        const rawInput = prompt("🔮 請貼入要自動匯入的片段內容：\n格式例：[副標]標題 [細項-名稱]內容");
-        if (!rawInput) return;
+        const title = card.querySelector('.category-title').value;
+        const gen = {
+            prefix: ["虛數", "鈦金", "深淵", "極光", "零點", "因果", "維度", "靈魂", "熵值", "星塵"],
+            core: ["超導", "電漿", "共振", "裁斷", "重組", "追蹤", "吞噬", "崩解", "摺疊", "演化"],
+            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"],
+            ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
+        };
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const randomResult = () => `${pick(gen.prefix)}${pick(gen.core)} ${pick(gen.suffix)}`;
 
-        // 將輸入內容按行拆分
-        const lines = rawInput.split('\n');
-        
-        lines.forEach(line => {
-            line = line.trim();
-            if (!line) return;
-
-            // 1. 解析副標題：識別 [副標] 或 [副標題]
-            const subMatch = line.match(/^\[副標題?\][:：]?\s*(.*)/);
-            if (subMatch) {
-                addSub(card, subMatch[1]);
-                return;
-            }
-
-            // 2. 解析細項：識別 [細項-名稱]：內容
-            const ruleMatch = line.match(/^\[細項-(.*?)\][:：]?\s*(.*)/);
-            if (ruleMatch) {
-                newRule(card, ruleMatch[1], ruleMatch[2]);
-                return;
-            }
-
-            // 3. 備用解析：如果沒有標籤，嘗試解析 名稱：內容 格式
-            const simpleMatch = line.match(/^(.*?)[:：]\s*(.*)/);
-            if (simpleMatch && !line.startsWith('[')) {
-                newRule(card, simpleMatch[1], simpleMatch[2]);
-            }
-        });
+        if(title.includes("資質") || title.includes("徽章") || title.includes("註冊")) {
+            addSub(card, "血契認證：冒險者徽章數據 (即時鑑定)");
+            const rhp = Math.floor(Math.random() * 70) + 80;
+            const rmp = Math.floor(Math.random() * 1500) + 500;
+            newRule(card, "HP (狀態)", `${rhp} / ${rhp} [完美穩定]`);
+            newRule(card, "MP (能量)", `${rmp} / ${rmp} [充盈]`);
+            newRule(card, "SP (負荷)", "200 / 200 [輕盈]");
+            newRule(card, "屬性", randomResult());
+            newRule(card, "技能", `${pick(gen.prefix)}${pick(gen.core)}邏輯`);
+            newRule(card, "天賦", `${pick(gen.core)}型${pick(gen.prefix)}感應`);
+            newRule(card, "潛能", `${pick(gen.ranks)} ${pick(gen.prefix)}架構師`);
+            alert("🧩 鑑定存檔完成！原始數據已隨機生成。");
+        } else {
+            addSub(card, "AI 隨機演算片段");
+            newRule(card, "系統負載", (Math.random() * 100).toFixed(2) + "%");
+            alert("🧩 隨機片段已匯入。");
+        }
     }
 
     function addSub(card, val = "") {
@@ -227,27 +284,6 @@
         list.appendChild(item);
     }
 
-    function newCategory(t = "") {
-        const div = document.createElement('div');
-        div.className = 'category-card';
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
-                <input type="text" class="category-title" value="${t}" placeholder="輸入大方向名稱...">
-                <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
-            </div>
-            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:5px;">
-                <button class="btn btn-import" onclick="importSoulFragment(this.closest('.category-card'))">🧩 匯入片段</button>
-                <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this.closest('.category-card'))">🏷️ 副標</button>
-                <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this.closest('.category-card'))">➕ 細項</button>
-            </div>
-            <div class="mixed-list"></div>
-        `;
-        document.getElementById('settings-container').appendChild(div);
-        return div;
-    }
-
-    // JSON 處理邏輯與 V2.2.3 相同
     function packData() {
         return {
             title: document.getElementById('main-title').value,
@@ -264,7 +300,7 @@
 
     function exportToJSON() { 
         const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
-        const a = document.createElement('a'); a.download = `Alchemy_Save.json`; a.href = URL.createObjectURL(blob); a.click(); 
+        const a = document.createElement('a'); a.download = `Alchemy_Save_${Date.now()}.json`; a.href = URL.createObjectURL(blob); a.click(); 
     }
     function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製")); }
 
@@ -290,7 +326,6 @@
 
     const savedBg = localStorage.getItem('alchemy_bg_v2');
     if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
-
 </script>
 </body>
 </html>
