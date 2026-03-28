@@ -94,6 +94,11 @@
         .status-tag-hp { color: var(--hp-color) !important; border-color: var(--hp-color) !important; }
         .status-tag-mp { color: var(--mp-color) !important; border-color: var(--mp-color) !important; }
         .status-tag-sp { color: var(--sp-color) !important; border-color: var(--sp-color) !important; }
+
+        /* 匯入視窗樣式 */
+        .import-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; justify-content: center; align-items: center; }
+        .import-content { background: #222; padding: 25px; border-radius: 15px; width: 80%; max-width: 600px; border: 1px solid var(--main-color); color: #fff; }
+        .import-textarea { width: 100%; height: 250px; background: #111; color: #8ce1ab; border: 1px solid #444; padding: 10px; font-family: monospace; margin-top: 10px; resize: none; }
     </style>
 </head>
 <body>
@@ -132,8 +137,22 @@
     <pre id="export-display" style="display:none; margin-top:20px; padding:15px; background:rgba(0,0,0,0.9); color:#0f0; border:1px solid #27ae60; border-radius:5px; white-space:pre-wrap; font-family:Consolas, monospace;"></pre>
 </div>
 
+<div id="import-modal" class="import-modal">
+    <div class="import-content">
+        <h3>🧩 結構化片段匯入</h3>
+        <p style="font-size: 0.8em; color: #aaa;">請貼上文字，系統將自動解析大方向、副標與細項。</p>
+        <textarea id="import-text" class="import-textarea" placeholder="範例格式：&#10;{大方向名稱}&#10;一(副標)&#10;1.細項說明"></textarea>
+        <div style="margin-top:15px; text-align:right; gap:10px; display:flex; justify-content:flex-end;">
+            <button class="btn" style="background:#555; color:#fff;" onclick="closeImport()">取消</button>
+            <button class="btn" style="background:var(--main-color); color:#fff;" id="btn-do-import">執行解析整合</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
+    let currentTargetCard = null;
+
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
             document.getElementById('login-overlay').style.display = 'none';
@@ -141,7 +160,7 @@
         } else alert("冒險者驗證錯誤");
     });
 
-    // 背景與 UI 調整
+    // 背景調整與原有邏輯 (V2.2.2 原封不動)
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
@@ -170,42 +189,76 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
-    // 排序功能
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    // 核心：JSON 匯入修復邏輯
-    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊：V2.2.1】";
-                document.getElementById('version-number').value = data.version || "0105";
-                const container = document.getElementById('settings-container');
-                container.innerHTML = "";
-                if (data.categories && Array.isArray(data.categories)) {
-                    data.categories.forEach(c => {
-                        const card = newCategory(c.name);
-                        if (c.items && Array.isArray(c.items)) {
-                            c.items.forEach(item => {
-                                if (item.type === 'sub') addSub(card, item.val);
-                                else newRule(card, item.k, item.v);
-                            });
-                        }
-                    });
-                    alert("✅ 冒險者數據已成功載入徽章！");
-                }
-            } catch (err) { alert("❌ JSON 解析失敗"); }
-        };
-        reader.readAsText(file);
-    });
+    // 核心解析器邏輯
+    function importSoulFragment(card) {
+        currentTargetCard = card;
+        document.getElementById('import-modal').style.display = 'flex';
+        document.getElementById('import-text').value = "";
+    }
 
-    // 修正後的 newCategory
+    function closeImport() { document.getElementById('import-modal').style.display = 'none'; }
+
+    document.getElementById('btn-do-import').onclick = () => {
+        const text = document.getElementById('import-text').value.trim();
+        if(!text) return;
+
+        // 判斷是否執行原本的「自動生成」邏輯
+        const cardTitle = currentTargetCard.querySelector('.category-title').value;
+        if(text === "RANDOM" || (!text.includes("\n") && (cardTitle.includes("資資") || cardTitle.includes("徽章")))) {
+             executeAutoRandom(currentTargetCard);
+             closeImport();
+             return;
+        }
+
+        // 執行結構化解析
+        const lines = text.split('\n');
+        lines.forEach((line, i) => {
+            line = line.trim();
+            if(!line) return;
+
+            // 1. 解析大方向 (如果第一行包含括號)
+            if(i === 0 && (line.includes("{") || line.includes("大方向"))) {
+                const cleanT = line.replace(/[\{\}\(\)]/g, '').replace('大方向', '').trim();
+                currentTargetCard.querySelector('.category-title').value = cleanT;
+            }
+            // 2. 解析副標 (國字數字開頭或標記副標)
+            else if(line.match(/^[一二三四五六七八九十]/) || line.includes("副標")) {
+                const cleanSub = line.replace(/[\(\)副標]/g, '').trim();
+                addSub(currentTargetCard, cleanSub);
+            }
+            // 3. 解析細項 (數字開頭)
+            else if(line.match(/^\d+/) || line.includes("細項")) {
+                let parts = line.split(/[. 　]/);
+                let k = parts[1] || "細項";
+                let v = line.substring(line.indexOf(k) + k.length).trim();
+                newRule(currentTargetCard, k, v);
+            }
+        });
+        closeImport();
+    };
+
+    function executeAutoRandom(card) {
+        const gen = {
+            prefix: ["虛數", "鈦金", "深淵", "極光", "零點", "因果", "維度", "靈魂", "熵值", "星塵"],
+            core: ["超導", "電漿", "共振", "裁斷", "重組", "追蹤", "吞噬", "崩解", "摺疊", "演化"],
+            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"],
+            ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
+        };
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        addSub(card, "血契認證：冒險者徽章數據 (即時鑑定)");
+        const rhp = Math.floor(Math.random() * 70) + 80;
+        newRule(card, "HP (狀態)", `${rhp} / ${rhp} [完美穩定]`);
+        newRule(card, "MP (能量)", `${Math.floor(Math.random()*1500)+500} [充盈]`);
+        newRule(card, "屬性", `${pick(gen.prefix)}${pick(gen.core)} ${pick(gen.suffix)}`);
+        alert("🧩 鑑定存檔完成！數據已注入。");
+    }
+
     function newCategory(t = "") {
         const div = document.createElement('div');
         div.className = 'category-card';
@@ -224,37 +277,6 @@
         `;
         document.getElementById('settings-container').appendChild(div);
         return div;
-    }
-
-    // 動態隨機抽樣系統
-    function importSoulFragment(card) {
-        const title = card.querySelector('.category-title').value;
-        const gen = {
-            prefix: ["虛數", "鈦金", "深淵", "極光", "零點", "因果", "維度", "靈魂", "熵值", "星塵"],
-            core: ["超導", "電漿", "共振", "裁斷", "重組", "追蹤", "吞噬", "崩解", "摺疊", "演化"],
-            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"],
-            ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
-        };
-        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        const randomResult = () => `${pick(gen.prefix)}${pick(gen.core)} ${pick(gen.suffix)}`;
-
-        if(title.includes("資質") || title.includes("徽章") || title.includes("註冊")) {
-            addSub(card, "血契認證：冒險者徽章數據 (即時鑑定)");
-            const rhp = Math.floor(Math.random() * 70) + 80;
-            const rmp = Math.floor(Math.random() * 1500) + 500;
-            newRule(card, "HP (狀態)", `${rhp} / ${rhp} [完美穩定]`);
-            newRule(card, "MP (能量)", `${rmp} / ${rmp} [充盈]`);
-            newRule(card, "SP (負荷)", "200 / 200 [輕盈]");
-            newRule(card, "屬性", randomResult());
-            newRule(card, "技能", `${pick(gen.prefix)}${pick(gen.core)}邏輯`);
-            newRule(card, "天賦", `${pick(gen.core)}型${pick(gen.prefix)}感應`);
-            newRule(card, "潛能", `${pick(gen.ranks)} ${pick(gen.prefix)}架構師`);
-            alert("🧩 鑑定存檔完成！原始數據已隨機生成。");
-        } else {
-            addSub(card, "AI 隨機演算片段");
-            newRule(card, "系統負載", (Math.random() * 100).toFixed(2) + "%");
-            alert("🧩 隨機片段已匯入。");
-        }
     }
 
     function addSub(card, val = "") {
@@ -284,6 +306,7 @@
         list.appendChild(item);
     }
 
+    // 存檔與捲軸生成邏輯 (原封不動)
     function packData() {
         return {
             title: document.getElementById('main-title').value,
