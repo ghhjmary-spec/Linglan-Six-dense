@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.1.4</title>
+    <title>虛擬靈魂煉金工坊 V2.0.8</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -30,76 +30,85 @@
             align-items: flex-start; 
         }
         
-        /* 踩地雷登入畫面 */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; overflow-y: auto; }
-        .login-box { background: white; padding: 25px; border-radius: 20px; text-align: center; width: 380px; border: 2px solid var(--main-color); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        /* 登入遮罩 */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
+        .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        /* 踩地雷樣式 */
-        .mines-grid { display: grid; grid-template-columns: repeat(9, 32px); grid-template-rows: repeat(9, 32px); gap: 2px; justify-content: center; margin: 15px 0; background: #bbb; padding: 5px; border: 3px inset #eee; }
-        .cell { width: 32px; height: 32px; background: #ccc; border: 3px outset #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; user-select: none; font-size: 14px; }
-        .cell.revealed { background: #ddd; border: 1px solid #999; cursor: default; }
-        .cell.mine { background: #e74c3c; }
-        .cell.flag { background: #f1c40f; }
-
-        /* 主程式對話框 - 確保變數生效 */
         .container { 
-            background-color: rgba(255, 255, 255, var(--interface-opacity)); 
+            background: rgba(255, 255, 255, var(--interface-opacity)); 
             width: 95%; max-width: 950px; padding: 30px; 
-            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-            display: none; position: relative; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            display: none; 
+            position: relative; 
             backdrop-filter: blur(var(--interface-blur)); 
             -webkit-backdrop-filter: blur(var(--interface-blur));
         }
         
         .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent; }
+        .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
+        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; background: rgba(255,255,255, 0.5); }
+
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
-        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; }
+        
+        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--main-color); color: white; }
         .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
         
-        .category-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.4); border-left: 8px solid var(--main-color); position: relative; }
+        .category-card { 
+            border: 1px solid var(--border-color); 
+            padding: 20px; border-radius: 10px; margin-bottom: 20px; 
+            background: rgba(255, 255, 255, 0.4);
+            position: relative; border-left: 8px solid var(--main-color); 
+        }
+        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px;}
+        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.6); border: 1px solid #ddd; outline: none; }
+        
         .mixed-list { display: flex; flex-direction: column; gap: 10px; }
         .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
-        .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid #ddd; }
-        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .rule-key { width: 22%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-weight: bold; }
-        .rule-value { width: 65%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-height: 60px; resize: vertical; }
+        .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; outline: none; border: 1px solid #ddd; }
         
-        .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 18px; }
+        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
+        .rule-key { width: 22%; padding: 8px; border-radius: 5px; font-weight: bold; border: 1px solid #ddd; outline: none; }
+        .rule-value { width: 65%; padding: 8px; border-radius: 5px; min-height: 60px; font-size: 14px; resize: vertical; border: 1px solid #ddd; outline: none; }
+        
         .export-area { margin-top: 30px; padding: 15px; background: rgba(34, 34, 34, 0.95); color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
+        .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; }
+        .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 18px; padding: 2px; }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h3 style="margin:0;">🚩 煉金防護：9x9 踩地雷</h3>
-        <p style="font-size:12px; color:#666;">左鍵挖開，右鍵插旗。完成挑戰或直接登入。</p>
-        <div class="mines-grid" id="mines-board"></div>
-        <input type="text" id="user" placeholder="帳號" style="width:80%; padding:8px; margin-bottom:5px;">
-        <input type="password" id="pass" placeholder="密碼" style="width:80%; padding:8px; margin-bottom:10px;">
-        <button class="btn-login" id="start-btn">解鎖進入工坊</button>
+        <h2>🔒 煉金工坊驗證</h2>
+        <input type="text" id="user" placeholder="帳號" autocomplete="off" style="width:80%; padding:8px; margin-bottom:5px;">
+        <input type="password" id="pass" placeholder="密碼" autocomplete="off" style="width:80%; padding:8px; margin-bottom:10px;">
+        <button class="btn-login" id="start-btn">解鎖進入</button>
     </div>
 </div>
 
 <div class="container" id="main-app">
-    <button id="bg-config-btn" style="position:absolute; top:20px; right:20px; background:var(--main-color); color:white; border:none; border-radius:50%; width:40px; height:40px; cursor:pointer;">🖼️</button>
-    
+    <button id="bg-config-btn">🖼️</button>
     <div class="config-panel" id="bg-config-panel">
         <h4>介面配置</h4>
         <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
-        <p style="font-size:12px; margin:5px 0;">背景垂直位移：</p>
+        <p style="font-size:12px; margin:5px 0;">背景上下位移：</p>
         <input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%">
-        <p style="font-size:12px; margin:10px 0 0;">對話框透明度：</p>
+        <p style="font-size:12px; margin:10px 0 5px;">介面透明度：</p>
         <input type="range" min="10" max="100" value="85" id="interface-opacity-slider" style="width:100%">
-        <p style="font-size:12px; margin:10px 0 0;">背景霧化強度：</p>
+        <p style="font-size:12px; margin:10px 0 5px;">霧化強度：</p>
         <input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%">
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.4】">
-    <div style="text-align:right; opacity:0.7;">版本：V1.<input type="number" id="version-number" value="0103" style="width:60px;"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.0.8】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -112,92 +121,29 @@
     <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增敘事大方向</button>
     
     <div style="display:flex; gap:15px; margin-top:20px;">
-        <button class="btn" style="flex:1; background:#27ae60; color:white; padding:15px;" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
-        <button class="btn" style="flex:2; background:#2c3e50; color:white; padding:15px;" onclick="showScroll()">🔮 生成靈魂卷軸</button>
+        <button class="btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
+        <button class="btn" style="flex:2; background:#2c3e50; color:white;" onclick="showScroll()">🔮 生成靈魂卷軸</button>
     </div>
     <div id="export-display" class="export-area"></div>
 </div>
 
 <script>
-    // --- 1. 踩地雷邏輯 ---
-    const boardSize = 9, mineCount = 10;
-    let board = [], revealedCount = 0;
-    function initMines() {
-        const grid = document.getElementById('mines-board'); grid.innerHTML = '';
-        board = Array.from({length: boardSize}, () => Array(boardSize).fill(0));
-        let placed = 0;
-        while(placed < mineCount) {
-            let r = Math.floor(Math.random()*boardSize), c = Math.floor(Math.random()*boardSize);
-            if(board[r][c] !== 'M') { board[r][c] = 'M'; placed++; }
-        }
-        for(let r=0; r<boardSize; r++) {
-            for(let c=0; c<boardSize; c++) {
-                if(board[r][c] === 'M') continue;
-                let count = 0;
-                for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
-                    if(r+i>=0 && r+i<boardSize && c+j>=0 && c+j<boardSize && board[r+i][c+j]==='M') count++;
-                }
-                board[r][c] = count;
-            }
-        }
-        for(let r=0; r<boardSize; r++) {
-            for(let c=0; c<boardSize; c++) {
-                const cell = document.createElement('div'); cell.className = 'cell';
-                cell.dataset.r = r; cell.dataset.c = c;
-                cell.onclick = () => reveal(r, c);
-                cell.oncontextmenu = (e) => { e.preventDefault(); cell.classList.toggle('flag'); };
-                grid.appendChild(cell);
-            }
-        }
-    }
-    function reveal(r, c) {
-        const grid = document.getElementById('mines-board');
-        const idx = r * boardSize + c; const el = grid.children[idx];
-        if(el.classList.contains('revealed') || el.classList.contains('flag')) return;
-        el.classList.add('revealed');
-        if(board[r][c] === 'M') { el.classList.add('mine'); el.innerText = '💣'; alert('碰！挑戰失敗，請重新整理頁面。'); return; }
-        el.innerText = board[r][c] === 0 ? '' : board[r][c];
-        if(board[r][c] === 0) {
-            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
-                if(r+i>=0 && r+i<boardSize && c+j>=0 && c+j<boardSize) reveal(r+i, c+j);
-            }
-        }
-    }
+    // 基礎安全驗證 (已移除踩地雷代碼)
+    const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
+    document.getElementById('start-btn').addEventListener('click', () => {
+        if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+        } else { alert("驗證錯誤！"); }
+    });
 
-    // --- 2. 登入邏輯 ---
-    const _0x4a2e = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
-    document.getElementById('start-btn').onclick = () => {
-        if(btoa(document.getElementById('user').value)===_0x4a2e[0] && btoa(document.getElementById('pass').value)===_0x4a2e[1]) {
-            document.getElementById('login-overlay').style.display='none';
-            document.getElementById('main-app').style.display='block';
-        } else alert("驗證錯誤！");
-    };
+    // 介面控制
+    const configPanel = document.getElementById('bg-config-panel');
+    document.getElementById('bg-config-btn').addEventListener('click', () => configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block');
+    document.getElementById('interface-opacity-slider').addEventListener('input', (e) => document.getElementById('main-app').style.background = `rgba(255, 255, 255, ${e.target.value / 100})`);
+    document.getElementById('interface-blur-slider').addEventListener('input', (e) => document.getElementById('main-app').style.backdropFilter = `blur(${e.target.value}px)`);
+    document.getElementById('bg-pos-slider').addEventListener('input', (e) => document.body.style.backgroundPositionY = e.target.value + "%");
 
-    // --- 3. 介面控制 (透明度修復) ---
-    document.getElementById('bg-config-btn').onclick = () => {
-        const p = document.getElementById('bg-config-panel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    };
-    document.getElementById('interface-opacity-slider').oninput = (e) => {
-        document.documentElement.style.setProperty('--interface-opacity', e.target.value / 100);
-    };
-    document.getElementById('interface-blur-slider').oninput = (e) => {
-        document.documentElement.style.setProperty('--interface-blur', e.target.value + 'px');
-    };
-    document.getElementById('bg-pos-slider').oninput = (e) => {
-        document.body.style.backgroundPositionY = e.target.value + "%";
-    };
-    document.getElementById('upload-bg-trigger').onclick = () => document.getElementById('hidden-bg-input').click();
-    document.getElementById('hidden-bg-input').onchange = (e) => {
-        const r = new FileReader();
-        r.onload = (ev) => { 
-            document.body.style.backgroundImage = `url(${ev.target.result})`; 
-            localStorage.setItem('alchemy_bg', ev.target.result); 
-        };
-        r.readAsDataURL(e.target.files[0]);
-    };
-
-    // --- 4. 編輯邏輯 ---
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
         if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
@@ -205,108 +151,112 @@
     }
 
     function newCategory(t = "") {
-        const div = document.createElement('div'); div.className = 'category-card';
+        const div = document.createElement('div');
+        div.className = 'category-card';
         div.innerHTML = `
-            <div class="category-header" style="border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
+            <div class="category-header">
+                <div class="header-top">
+                    <button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button>
+                    <button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button>
                     <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                     <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
                 </div>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-add" style="background:#8e44ad; font-size:12px;" onclick="importSoulFragment(this)">🧩 匯入片段</button>
-                    <button class="btn-add" style="background:#f39c12; font-size:12px;" onclick="addSub(this.closest('.category-card').querySelector('.mixed-list'))">🏷️ 副標題</button>
-                    <button class="btn-add" style="background:#3498db; font-size:12px;" onclick="newRule(this.closest('.category-card').querySelector('.mixed-list'))">➕ 細項</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn" style="background:#8e44ad; color:white; font-size:12px;" onclick="importSoulFragment(this)">🧩 匯入片段</button>
+                    <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
+                    <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this)">➕ 細項</button>
                 </div>
             </div>
             <div class="mixed-list"></div>
         `;
-        document.getElementById('settings-container').appendChild(div); return div;
+        document.getElementById('settings-container').appendChild(div);
+        return div;
     }
 
-    function addSub(container, val = "") {
-        const div = document.createElement('div'); div.className = 'subtitle-item';
-        div.innerHTML = `<button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">⬇️</button><input type="text" class="subtitle-input" value="${val}"><button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
-        container.appendChild(div);
-    }
-
-    function newRule(container, k = "", v = "") {
-        const div = document.createElement('div'); div.className = 'rule-item';
-        div.innerHTML = `<div style="display:flex; flex-direction:column;"><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔼</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔽</button></div><input type="text" class="rule-key" placeholder="項目" value="${k}"><textarea class="rule-value" placeholder="內容">${v}</textarea><button class="btn-del" onclick="this.parentElement.remove()">X</button>`;
-        container.appendChild(div);
-    }
-
-    // --- 5. JSON 匯入修復：確保順序重建 ---
-    document.getElementById('hidden-file-input').onchange = (e) => {
-        const r = new FileReader(); r.onload = (ev) => {
-            try {
-                const d = JSON.parse(ev.target.result);
-                document.getElementById('main-title').value = d.title || "";
-                document.getElementById('version-number').value = d.version || "0103";
-                const box = document.getElementById('settings-container'); box.innerHTML = "";
-                if(d.categories) d.categories.forEach(c => {
-                    const card = newCategory(c.name);
-                    const list = card.querySelector('.mixed-list');
-                    if (c.items) {
-                        c.items.forEach(item => {
-                            if (item.type === 'sub') addSub(list, item.val);
-                            else if (item.type === 'rule') newRule(list, item.k, item.v);
-                        });
-                    } else {
-                        if(c.subtitles) c.subtitles.forEach(s=>addSub(list,s));
-                        if(c.rules) c.rules.forEach(r=>newRule(list,r.k,r.v));
-                    }
-                });
-                alert("✅ JSON 載入成功！順序已校正。");
-            } catch(e) { alert("❌ 格式錯誤"); }
-        }; r.readAsText(e.target.files[0]);
-    };
-
-    function packData() { 
-        return { 
-            title: document.getElementById('main-title').value, version: document.getElementById('version-number').value, 
-            categories: Array.from(document.querySelectorAll('.category-card')).map(card => { 
-                const list = card.querySelector('.mixed-list');
-                const items = Array.from(list.children).map(el => {
-                    if (el.classList.contains('subtitle-item')) return { type: 'sub', val: el.querySelector('.subtitle-input').value };
-                    if (el.classList.contains('rule-item')) return { type: 'rule', k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value };
-                });
-                return { name: card.querySelector('.category-title').value, items: items }; 
-            }) 
-        }; 
-    }
-
-    function exportToJSON() { const b=new Blob([JSON.stringify(packData(),null,2)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`存檔_V${document.getElementById('version-number').value}.json`; a.click(); }
-    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(()=>alert("JSON 已複製")); }
-    function makeScroll() { 
-        let t=`# ${document.getElementById('main-title').value}\n\n`; 
-        document.querySelectorAll('.category-card').forEach((card,i)=>{ 
-            t+=`## ${i+1}. ${card.querySelector('.category-title').value}\n`; 
-            card.querySelector('.mixed-list').querySelectorAll('.subtitle-item, .rule-item').forEach(el=>{ 
-                if(el.classList.contains('subtitle-item')) t+=`### ${el.querySelector('.subtitle-input').value}\n`; 
-                else t+=`- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`; 
-            }); t+="\n"; 
-        }); return t; 
-    }
-    function showScroll() { document.getElementById('export-display').innerText=makeScroll(); document.getElementById('export-display').style.display='block'; window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'}); }
-    function copyFinalScroll() { navigator.clipboard.writeText(makeScroll()).then(()=>alert("卷軸已複製")); }
-
+    // 核心匯入解析引擎
     function importSoulFragment(btn) {
-        const raw = prompt("請貼上靈魂片段內容："); if (!raw) return;
-        const container = btn.closest('.category-card').querySelector('.mixed-list');
-        raw.split('\n').forEach(line => {
-            const cleanLine = line.trim(); if (!cleanLine) return;
-            if (cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])/)) addSub(container, cleanLine);
-            else if (cleanLine.match(/^【(.*?)】[：:](.*)/)) {
-                const m = cleanLine.match(/^【(.*?)】[：:](.*)/);
-                newRule(container, m[1].trim(), m[2].trim());
-            } else newRule(container, "補充", cleanLine);
+        const raw = prompt("請貼上靈魂片段內容：");
+        if (!raw) return;
+        const lines = raw.split('\n');
+        const card = btn.closest('.category-card');
+        const titleInput = card.querySelector('.category-title');
+        let isFirstValidLine = true;
+
+        lines.forEach(line => {
+            const cleanLine = line.trim();
+            if (cleanLine === "") return;
+
+            // 辨識大方向
+            if (isFirstValidLine) {
+                const isSub = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
+                if (!isSub) { titleInput.value = cleanLine; isFirstValidLine = false; return; }
+            }
+            isFirstValidLine = false;
+
+            // 辨識副標題
+            const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
+            if (subMatch) { addSub(btn, cleanLine); return; }
+
+            // 辨識細項 (標題：內容)
+            const colonMatch = cleanLine.match(/^([^：:，。]{1,30})[：:](.*)/);
+            if (colonMatch && !colonMatch[1].endsWith('如')) {
+                newRule(btn, colonMatch[1].trim(), colonMatch[2].trim());
+            } else {
+                newRule(btn, "補充說明", cleanLine);
+            }
         });
     }
 
-    const savedBg = localStorage.getItem('alchemy_bg');
-    if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
-    initMines();
+    function addSub(btn, val = "") {
+        const item = document.createElement('div');
+        item.className = 'subtitle-item';
+        item.innerHTML = `<button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button><input type="text" class="subtitle-input" value="${val}"><button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
+        btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
+    }
+
+    function newRule(btn, k = "", v = "") {
+        const item = document.createElement('div');
+        item.className = 'rule-item';
+        item.innerHTML = `<div style="display:flex; flex-direction:column;"><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔼</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔽</button></div><input type="text" class="rule-key" placeholder="項目" value="${k}"><textarea class="rule-value" placeholder="內容">${v}</textarea><button class="btn-del" onclick="this.parentElement.remove()">X</button>`;
+        btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
+    }
+
+    function packData() {
+        return {
+            title: document.getElementById('main-title').value,
+            version: document.getElementById('version-number').value,
+            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
+                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
+                const subs = []; const rules = [];
+                mixed.forEach(el => {
+                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
+                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
+                });
+                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
+            })
+        };
+    }
+
+    function showScroll() {
+        let t = `# ${document.getElementById('main-title').value}\n\n`;
+        document.querySelectorAll('.category-card').forEach((card, i) => {
+            t += `## ${i + 1}. ${card.querySelector('.category-title').value}\n`;
+            card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
+                if (el.classList.contains('subtitle-item')) t += `### ${el.querySelector('.subtitle-input').value}\n`;
+                else t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
+            });
+            t += "\n";
+        });
+        document.getElementById('export-display').innerText = t;
+        document.getElementById('export-display').style.display = 'block';
+    }
+
+    function copyFinalScroll() { navigator.clipboard.writeText(document.getElementById('export-display').innerText || "請先生成卷軸").then(() => alert("卷軸已複製！")); }
+    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
+    function exportToJSON() { 
+        const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Alchemy_Save.json`; a.click(); 
+    }
 </script>
 </body>
 </html>
