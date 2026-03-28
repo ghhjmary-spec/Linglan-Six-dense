@@ -30,7 +30,6 @@
             align-items: flex-start; 
         }
         
-        /* 登入遮罩 */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
         .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
@@ -128,7 +127,7 @@
 </div>
 
 <script>
-    // 基礎安全驗證 (已移除踩地雷代碼)
+    // 驗證邏輯
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
@@ -137,7 +136,7 @@
         } else { alert("驗證錯誤！"); }
     });
 
-    // 介面控制
+    // 介面背景控制
     const configPanel = document.getElementById('bg-config-panel');
     document.getElementById('bg-config-btn').addEventListener('click', () => configPanel.style.display = configPanel.style.display === 'block' ? 'none' : 'block');
     document.getElementById('interface-opacity-slider').addEventListener('input', (e) => document.getElementById('main-app').style.background = `rgba(255, 255, 255, ${e.target.value / 100})`);
@@ -173,7 +172,6 @@
         return div;
     }
 
-    // 核心匯入解析引擎
     function importSoulFragment(btn) {
         const raw = prompt("請貼上靈魂片段內容：");
         if (!raw) return;
@@ -186,23 +184,20 @@
             const cleanLine = line.trim();
             if (cleanLine === "") return;
 
-            // 辨識大方向
             if (isFirstValidLine) {
                 const isSub = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
                 if (!isSub) { titleInput.value = cleanLine; isFirstValidLine = false; return; }
             }
             isFirstValidLine = false;
 
-            // 辨識副標題
             const subMatch = cleanLine.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
             if (subMatch) { addSub(btn, cleanLine); return; }
 
-            // 辨識細項 (標題：內容)
             const colonMatch = cleanLine.match(/^([^：:，。]{1,30})[：:](.*)/);
             if (colonMatch && !colonMatch[1].endsWith('如')) {
                 newRule(btn, colonMatch[1].trim(), colonMatch[2].trim());
             } else {
-                newRule(btn, "補充說明", cleanLine);
+                newRule(btn, "補充", cleanLine);
             }
         });
     }
@@ -247,6 +242,7 @@
             });
             t += "\n";
         });
+        t += `---\n**版本：V1.${document.getElementById('version-number').value.padStart(4, '0')} (V.Final)**`;
         document.getElementById('export-display').innerText = t;
         document.getElementById('export-display').style.display = 'block';
     }
