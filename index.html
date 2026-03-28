@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.2.3</title>
+    <title>虛擬靈魂煉金工坊 V2.2.6</title>
     <style>
         :root { 
             --main-color: #27ae60; 
@@ -111,7 +111,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.3】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.6】">
     <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
     
     <div class="toolbar">
@@ -158,17 +158,6 @@
             reader.readAsDataURL(file);
         }
     });
-    document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
-        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${e.target.value / 100})`;
-    });
-    document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
-        const val = e.target.value + "px";
-        document.getElementById('main-app').style.backdropFilter = `blur(${val})`;
-        document.getElementById('main-app').style.webkitBackdropFilter = `blur(${val})`;
-    });
-    document.getElementById('bg-pos-slider').addEventListener('input', (e) => {
-        document.body.style.backgroundPositionY = e.target.value + "%";
-    });
 
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
@@ -176,78 +165,39 @@
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                document.getElementById('main-title').value = data.title || "【虛擬靈魂煉金工坊：V2.2.3】";
-                document.getElementById('version-number').value = data.version || "0105";
-                const container = document.getElementById('settings-container');
-                container.innerHTML = "";
-                if (data.categories && Array.isArray(data.categories)) {
-                    data.categories.forEach(c => {
-                        const card = newCategory(c.name);
-                        if (c.items && Array.isArray(c.items)) {
-                            c.items.forEach(item => {
-                                if (item.type === 'sub') addSub(card, item.val);
-                                else newRule(card, item.k, item.v);
-                            });
-                        }
-                    });
-                }
-            } catch (err) { alert("❌ JSON 解析失敗"); }
-        };
-        reader.readAsText(file);
-    });
-
-    function newCategory(t = "") {
-        const div = document.createElement('div');
-        div.className = 'category-card';
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
-                <input type="text" class="category-title" value="${t}" placeholder="輸入大方向名稱...">
-                <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
-            </div>
-            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:5px;">
-                <button class="btn btn-import" onclick="importSoulFragment(this.closest('.category-card'))">🧩 匯入片段</button>
-                <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this.closest('.category-card'))">🏷️ 副標</button>
-                <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this.closest('.category-card'))">➕ 細項</button>
-            </div>
-            <div class="mixed-list"></div>
-        `;
-        document.getElementById('settings-container').appendChild(div);
-        return div;
-    }
-
-    // --- 徹底清除自動填空邏輯 ---
+    // --- 核心功能：匯入片段解析填空 ---
     function importSoulFragment(card) {
-        const title = card.querySelector('.category-title').value;
-        const gen = {
-            prefix: ["虛數", "鈦金", "深淵", "極光", "零點", "因果", "維度", "靈魂", "熵值", "星塵"],
-            core: ["超導", "電漿", "共振", "裁斷", "重組", "追蹤", "吞噬", "崩解", "摺疊", "演化"],
-            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"],
-            ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
-        };
-        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        
-        let fragmentData = "";
-        if(title.includes("資質") || title.includes("徽章") || title.includes("註冊")) {
-            fragmentData = `[大方向]：${title}\n` +
-                            `[副標]：血契認證：冒險者徽章數據\n` +
-                            `[細項-HP]：${Math.floor(Math.random() * 70) + 80} / 80\n` +
-                            `[細項-屬性]：${pick(gen.prefix)}${pick(gen.core)}\n` +
-                            `[細項-潛能]：${pick(gen.ranks)}`;
-        } else {
-            fragmentData = `[副標]：AI 隨機演算片段\n` +
-                            `[細項-系統負載]：${(Math.random() * 100).toFixed(2)}%\n` +
-                            `[細項-核心邏輯]：執行預設指令。`;
-        }
+        // 彈出視窗讓使用者貼上文字
+        const rawInput = prompt("🔮 請貼入要自動匯入的片段內容：\n格式例：[副標]標題 [細項-名稱]內容");
+        if (!rawInput) return;
 
-        // 僅顯示彈窗，完全移除 addSub 或 newRule
-        prompt("🔮 生成成功！請手動複製內容：", fragmentData);
+        // 將輸入內容按行拆分
+        const lines = rawInput.split('\n');
+        
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line) return;
+
+            // 1. 解析副標題：識別 [副標] 或 [副標題]
+            const subMatch = line.match(/^\[副標題?\][:：]?\s*(.*)/);
+            if (subMatch) {
+                addSub(card, subMatch[1]);
+                return;
+            }
+
+            // 2. 解析細項：識別 [細項-名稱]：內容
+            const ruleMatch = line.match(/^\[細項-(.*?)\][:：]?\s*(.*)/);
+            if (ruleMatch) {
+                newRule(card, ruleMatch[1], ruleMatch[2]);
+                return;
+            }
+
+            // 3. 備用解析：如果沒有標籤，嘗試解析 名稱：內容 格式
+            const simpleMatch = line.match(/^(.*?)[:：]\s*(.*)/);
+            if (simpleMatch && !line.startsWith('[')) {
+                newRule(card, simpleMatch[1], simpleMatch[2]);
+            }
+        });
     }
 
     function addSub(card, val = "") {
@@ -277,6 +227,27 @@
         list.appendChild(item);
     }
 
+    function newCategory(t = "") {
+        const div = document.createElement('div');
+        div.className = 'category-card';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
+                <input type="text" class="category-title" value="${t}" placeholder="輸入大方向名稱...">
+                <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
+            </div>
+            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:5px;">
+                <button class="btn btn-import" onclick="importSoulFragment(this.closest('.category-card'))">🧩 匯入片段</button>
+                <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this.closest('.category-card'))">🏷️ 副標</button>
+                <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this.closest('.category-card'))">➕ 細項</button>
+            </div>
+            <div class="mixed-list"></div>
+        `;
+        document.getElementById('settings-container').appendChild(div);
+        return div;
+    }
+
+    // JSON 處理邏輯與 V2.2.3 相同
     function packData() {
         return {
             title: document.getElementById('main-title').value,
