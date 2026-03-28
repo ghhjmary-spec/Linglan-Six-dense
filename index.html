@@ -95,7 +95,6 @@
         .status-tag-mp { color: var(--mp-color) !important; border-color: var(--mp-color) !important; }
         .status-tag-sp { color: var(--sp-color) !important; border-color: var(--sp-color) !important; }
 
-        /* 匯入視窗樣式 */
         .import-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; justify-content: center; align-items: center; }
         .import-content { background: #222; padding: 25px; border-radius: 15px; width: 80%; max-width: 600px; border: 1px solid var(--main-color); color: #fff; }
         .import-textarea { width: 100%; height: 250px; background: #111; color: #8ce1ab; border: 1px solid #444; padding: 10px; font-family: monospace; margin-top: 10px; resize: none; }
@@ -117,7 +116,7 @@
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
     <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.2】">
-    <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
+    <div class="version-control">冒險序號：V2.<input type="text" id="version-number" value="0000" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px; text-align: center; color: #333;"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -140,8 +139,7 @@
 <div id="import-modal" class="import-modal">
     <div class="import-content">
         <h3>🧩 結構化片段匯入</h3>
-        <p style="font-size: 0.8em; color: #aaa;">請貼上文字，系統將自動解析大方向、副標與細項。</p>
-        <textarea id="import-text" class="import-textarea" placeholder="範例格式：&#10;{大方向名稱}&#10;一(副標)&#10;1.細項說明"></textarea>
+        <textarea id="import-text" class="import-textarea" placeholder="貼上格式內容..."></textarea>
         <div style="margin-top:15px; text-align:right; gap:10px; display:flex; justify-content:flex-end;">
             <button class="btn" style="background:#555; color:#fff;" onclick="closeImport()">取消</button>
             <button class="btn" style="background:var(--main-color); color:#fff;" id="btn-do-import">執行解析整合</button>
@@ -160,7 +158,6 @@
         } else alert("冒險者驗證錯誤");
     });
 
-    // 背景調整與原有邏輯
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
@@ -189,7 +186,6 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
-    // JSON 匯入修復邏輯
     document.getElementById('hidden-file-input').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -197,13 +193,10 @@
         reader.onload = (ev) => {
             try {
                 const data = JSON.parse(ev.target.result);
-                // 開始代入網站
                 if (data.title) document.getElementById('main-title').value = data.title;
                 if (data.version) document.getElementById('version-number').value = data.version;
-                
                 const container = document.getElementById('settings-container');
-                container.innerHTML = ""; // 清空目前內容
-
+                container.innerHTML = "";
                 data.categories.forEach(cat => {
                     const card = newCategory(cat.name);
                     cat.items.forEach(item => {
@@ -212,9 +205,7 @@
                     });
                 });
                 alert("🔮 靈魂記憶已成功載入！");
-            } catch (err) {
-                alert("❌ JSON 格式錯誤，無法讀取記憶。");
-            }
+            } catch (err) { alert("❌ JSON 格式錯誤"); }
         };
         reader.readAsText(file);
     });
@@ -225,7 +216,6 @@
         else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
     }
 
-    // 解析器邏輯
     function importSoulFragment(card) {
         currentTargetCard = card;
         document.getElementById('import-modal').style.display = 'flex';
@@ -249,7 +239,6 @@
         lines.forEach((line, i) => {
             line = line.trim();
             if(!line) return;
-
             if(i === 0 && (line.includes("{") || line.includes("大方向"))) {
                 const cleanT = line.replace(/[\{\}\(\)]/g, '').replace('大方向', '').trim();
                 currentTargetCard.querySelector('.category-title').value = cleanT;
@@ -272,8 +261,7 @@
         const gen = {
             prefix: ["虛數", "鈦金", "深淵", "極光", "零點", "因果", "維度", "靈魂", "熵值", "星塵"],
             core: ["超導", "電漿", "共振", "裁斷", "重組", "追蹤", "吞噬", "崩解", "摺疊", "演化"],
-            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"],
-            ranks: ["SSS 級", "SS 級", "S 級", "超越級", "未知等級", "原型", "根源"]
+            suffix: ["(高穩定)", "(高穿透)", "(不穩定)", "(收斂)", "(擴散)", "(異常)", "(極致)"]
         };
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
         addSub(card, "血契認證：數據即時鑑定");
@@ -360,10 +348,24 @@
             });
             t += "\n";
         });
+        
+        // --- 核心更新：版本資訊顯示於卷軸底部 ---
+        const vNum = document.getElementById('version-number').value;
+        t += `\n---\n📜 卷軸鑑定版本：V2.${vNum}\n`;
         return t;
     }
 
-    function showScroll() { const s = document.getElementById('export-display'); s.innerText = generateScroll(); s.style.display = 'block'; }
+    function showScroll() { 
+        // --- 核心更新：自動遞增 1 的邏輯 ---
+        let vInput = document.getElementById('version-number');
+        let nextV = parseInt(vInput.value) + 1;
+        vInput.value = nextV.toString().padStart(4, '0');
+        
+        const s = document.getElementById('export-display'); 
+        s.innerText = generateScroll(); 
+        s.style.display = 'block'; 
+    }
+    
     function downloadScrollTXT() {
         const blob = new Blob([generateScroll()], {type: "text/plain"});
         const a = document.createElement('a'); a.download = "Soul_Scroll.txt"; a.href = URL.createObjectURL(blob); a.click();
