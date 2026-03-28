@@ -1,29 +1,32 @@
+fullText:
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.1.7</title>
+    <title>虛擬靈魂煉金工坊 V2.1.8</title>
     <style>
         :root { 
-            --main-color: #4a7c59; 
+            --main-color: #27ae60; /* 綠色按鈕樣式 */
             --bg-color: #f4f7f5; 
             --interface-opacity: 0.85; 
             --interface-blur: 10px;
             --input-bg: rgba(255, 255, 255, 0.6); 
             --bg-pos-y: 50%;
-            --text-color: #333333;
-            --border-color: rgba(0,0,0,0.1);
+            --text-color: #f1f1f1; /* UI 文字改為亮色以貼合 code 樣式 */
+            --border-color: rgba(255,255,255,0.1);
+            --code-bg: #1e1e1e; /* 代碼塊深色背景 */
+            --code-text: #8ce1ab; /* 代碼塊亮綠色文字 */
         }
 
         body { 
-            font-family: "Microsoft JhengHei", sans-serif; 
+            font-family: "Microsoft JhengHei", Consolas, monospace; /* 加入程式碼字體 */
             background-color: var(--bg-color); 
             background-size: cover; 
             background-position: center var(--bg-pos-y);
             background-attachment: fixed; 
             background-repeat: no-repeat;
-            color: var(--text-color); 
+            color: #333; /* 基礎文字顏色 */
             padding: 20px; 
             display: flex; 
             justify-content: center; 
@@ -32,7 +35,7 @@
         }
         
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); }
+        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 340px; border: 2px solid var(--main-color); color: #333; }
         .btn-login { width: 100%; margin-top: 10px; background: var(--main-color); color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
         .container { 
@@ -51,42 +54,86 @@
             backdrop-filter: blur(calc(var(--interface-blur) * 0.5));
             -webkit-backdrop-filter: blur(calc(var(--interface-blur) * 0.5));
             transition: background 0.3s ease;
+            color: inherit;
         }
 
-        .main-title { color: var(--main-color); text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent !important; }
-        .version-control { text-align: right; color: var(--text-color); opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
-        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; }
+        .main-title { color: #333; text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; outline: none; background: transparent !important; }
+        .version-control { text-align: right; color: #333; opacity: 0.7; font-size: 0.9em; margin-bottom: 10px; }
+        #version-number { width: 80px; padding: 3px; border: 1px solid #ddd; border-radius: 3px; background: white !important; color: #333 !important;}
 
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap; }
         
-        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; }
-        .btn-add { background: var(--main-color); color: white; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; }
+        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center;}
         
+        /* 根據截圖修改的新增按鈕樣式 */
+        .btn-add-major { background: #3d6a4c; color: #f1f1f1; border: 1px solid #555; }
+        
+        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 3px;}
+        
+        /* 核心修改：代碼塊風格的卡片 */
         .category-card { 
             border: 1px solid var(--border-color); 
-            padding: 20px; border-radius: 10px; margin-bottom: 20px; 
-            background: rgba(255, 255, 255, 0.3);
-            position: relative; border-left: 8px solid var(--main-color); 
+            padding: 10px; border-radius: 5px; margin-bottom: 15px; 
+            background: var(--code-bg);
+            position: relative;
+            color: var(--code-text);
         }
-        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px;}
-        .category-title { font-size: 1.25em; font-weight: bold; color: var(--main-color); width: 85%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; outline: none; }
+        .category-header { border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 10px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;}
         
-        .mixed-list { display: flex; flex-direction: column; gap: 10px; }
-        .subtitle-item { display: flex; align-items: center; gap: 8px; background: rgba(243, 156, 18, 0.15); padding: 8px 12px; border-radius: 5px; border-left: 5px solid #f39c12; }
-        .subtitle-input { flex: 1; padding: 6px; border-radius: 4px; font-weight: bold; outline: none; border: 1px solid #ddd; }
+        /* 大方向標題樣式 - 深綠色代碼風 */
+        .category-title { 
+            font-size: 1.1em; font-weight: bold; color: #f1f1f1; width: 85%; padding: 5px; 
+            border-radius: 3px; border: 1px solid #444; outline: none; 
+            background: #2a4d36 !important; /* 截圖中的深綠背景 */
+        }
         
-        .rule-item { display: flex; gap: 8px; align-items: flex-start; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .rule-key { width: 22%; padding: 8px; border-radius: 5px; font-weight: bold; border: 1px solid #ddd; outline: none; }
-        .rule-value { width: 65%; padding: 8px; border-radius: 5px; min-height: 60px; font-size: 14px; resize: vertical; border: 1px solid #ddd; outline: none; }
+        .mixed-list { display: flex; flex-direction: column; gap: 6px; }
         
-        .export-area { margin-top: 30px; padding: 15px; background: rgba(34, 34, 34, 0.95); color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: monospace; }
-        .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* 副標題樣式 - 黃色細條 */
+        .subtitle-item { 
+            display: flex; align-items: center; gap: 8px; 
+            background: rgba(243, 156, 18, 0.1); padding: 5px 8px; 
+            border-radius: 3px; border-left: 3px solid #f39c12; 
+        }
+        .subtitle-input { 
+            flex: 1; padding: 4px; border-radius: 3px; font-weight: bold; outline: none; 
+            border: 1px solid #555; background: rgba(0,0,0,0.2) !important; color: #f39c12 !important;
+        }
         
-        #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; }
-        .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 18px; padding: 2px; }
+        /* 細項樣式 - 純代碼風 */
+        .rule-item { 
+            display: flex; gap: 8px; align-items: flex-start; 
+            background: rgba(255,255,255,0.02); padding: 5px; 
+            border-radius: 3px; border: 1px solid #333; 
+        }
+        .rule-key { 
+            width: 22%; padding: 5px; border-radius: 3px; font-weight: bold; 
+            border: 1px solid #444; outline: none; 
+            background: rgba(0,0,0,0.3) !important; color: #a5d6a7 !important; /* Key 的顏色 */
+        }
+        .rule-value { 
+            width: 65%; padding: 5px; border-radius: 3px; min-height: 40px; 
+            font-size: 13px; resize: vertical; border: 1px solid #444; outline: none; 
+            background: rgba(0,0,0,0.1) !important; color: #d1d1d1 !important; /* Value 的顏色 */
+            font-family: Consolas, monospace;
+        }
+        
+        /* 下方功能按鈕區 */
+        .bottom-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;}
+        .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 12px; font-weight: bold; min-width: 150px; }
+        .btn-generate-scroll { flex: 1; background: #34495e; color: white; padding: 12px; font-weight: bold; min-width: 150px; }
+        
+        /* ✨ 新增的下載按鈕樣式 ✨ */
+        .btn-download-txt { flex: 1; background: #2980b9; color: white; padding: 12px; font-weight: bold; min-width: 150px; }
+
+        .export-area { margin-top: 30px; padding: 15px; background: rgba(34, 34, 34, 0.95); color: #0f0; border-radius: 5px; display: none; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 13px; border: 1px solid #0f0;}
+        
+        #bg-config-btn { position: absolute; top: 20px; right: 20px; background: var(--main-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; z-index: 10; opacity: 0.7;}
+        #bg-config-btn:hover { opacity: 1; }
+        .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: white; border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); color: #333;}
+        .btn-emoji-move { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px; color: #999; }
+        .btn-emoji-move:hover { color: #f1f1f1; }
     </style>
 </head>
 <body>
@@ -104,7 +151,7 @@
     <button id="bg-config-btn">🖼️</button>
     <div class="config-panel" id="bg-config-panel">
         <h4>介面配置</h4>
-        <button class="btn btn-add" style="width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
+        <button class="btn" style="background:var(--main-color); color:white; width:100%; margin-bottom:10px;" id="upload-bg-trigger">📤 上傳背景</button>
         <p style="font-size:12px; margin:5px 0;">背景上下位移：</p>
         <input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%">
         <p style="font-size:12px; margin:10px 0 5px;">介面與輸入框透明度：</p>
@@ -114,22 +161,26 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.7】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.8】">
+    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0105"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
-        <button class="btn" style="background:#6c5ce7; color:white;" onclick="exportToJSON()">💾 下載存檔</button>
+        <button class="btn" style="background:#6c5ce7; color:white;" onclick="exportToJSON()">💾 下載存檔 (JSON)</button>
         <button class="btn" style="background:#2980b9; color:white;" id="import-json-trigger">📥 匯入 JSON</button>
         <input type="file" id="hidden-file-input" style="display:none;" accept=".json">
     </div>
 
     <div id="settings-container"></div>
-    <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增敘事大方向</button>
     
-    <div style="display:flex; gap:15px; margin-top:20px;">
-        <button class="btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
-        <button class="btn" style="flex:2; background:#2c3e50; color:white;" onclick="showScroll()">🔮 生成靈魂卷軸</button>
+    <button class="btn btn-add-major" style="width:100%; margin-top:10px;" onclick="newCategory()">✨ 新增敘事大方向</button>
+    
+    <div class="bottom-actions">
+        <button class="btn btn-copy-scroll" onclick="copyFinalScroll()">📜 複製靈魂卷軸</button>
+        
+        <button id="download-txt-btn" class="btn btn-download-txt" onclick="downloadScrollTXT()">💾 下載卷軸文字檔</button>
+        
+        <button class="btn btn-generate-scroll" onclick="showScroll()">🔮 生成靈魂卷軸</button>
     </div>
     <div id="export-display" class="export-area"></div>
 </div>
@@ -166,7 +217,7 @@
     document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
         const val = e.target.value / 100;
         document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${val})`;
-        document.documentElement.style.setProperty('--input-bg', `rgba(255, 255, 255, ${val * 0.7})`);
+        // document.documentElement.style.setProperty('--input-bg', `rgba(255, 255, 255, ${val * 0.7})`); // 拿掉這個防止覆蓋 code 樣式
     });
 
     document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
@@ -180,7 +231,7 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
-    // --- 關鍵修復：存檔與讀取邏輯 ---
+    // --- 存檔與讀取邏輯 ---
 
     document.getElementById('import-json-trigger').addEventListener('click', () => document.getElementById('hidden-file-input').click());
     document.getElementById('hidden-file-input').addEventListener('change', (e) => {
@@ -205,16 +256,15 @@
         if (data.categories) {
             data.categories.forEach(c => {
                 const card = newCategory(c.name);
-                const addBtn = card.querySelector('.btn');
+                const addBtn = card.querySelector('.category-header button.btn'); // 修正選擇器
                 
-                // 修正：支援新舊格式。新格式存放在 c.items 中以維持順序
                 if (c.items) {
                     c.items.forEach(item => {
                         if (item.type === 'sub') addSub(addBtn, item.val);
                         else if (item.type === 'rule') newRule(addBtn, item.k, item.v);
                     });
                 } else {
-                    // 相容舊存檔格式
+                    // 相容舊格式
                     if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
                     if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
                 }
@@ -227,7 +277,6 @@
             title: document.getElementById('main-title').value,
             version: document.getElementById('version-number').value,
             categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
-                // 核心修復：抓取所有 item 並按照順序存檔
                 const items = Array.from(card.querySelectorAll('.subtitle-item, .rule-item')).map(el => {
                     if (el.classList.contains('subtitle-item')) {
                         return { type: 'sub', val: el.querySelector('.subtitle-input').value };
@@ -237,7 +286,7 @@
                 });
                 return { 
                     name: card.querySelector('.category-title').value, 
-                    items: items // 新增順序紀錄欄位
+                    items: items
                 };
             })
         };
@@ -257,15 +306,17 @@
         div.innerHTML = `
             <div class="category-header">
                 <div class="header-top">
-                    <button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button>
-                    <button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button>
+                    <div>
+                        <button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button>
+                        <button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button>
+                    </div>
                     <input type="text" class="category-title" placeholder="大方向名稱" value="${t}">
                     <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
                 </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn" style="background:#8e44ad; color:white; font-size:12px;" onclick="importSoulFragment(this)">🧩 匯入片段</button>
-                    <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this)">🏷️ 副標題</button>
-                    <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this)">➕ 細項</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content: flex-end;">
+                    <button class="btn" style="background:#8e44ad; color:white; font-size:12px; padding: 4px 8px;" onclick="importSoulFragment(this)">🧩 匯入片段</button>
+                    <button class="btn" style="background:#f39c12; color:white; font-size:12px; padding: 4px 8px;" onclick="addSub(this)">🏷️ 副標題</button>
+                    <button class="btn" style="background:#3498db; color:white; font-size:12px; padding: 4px 8px;" onclick="newRule(this)">➕ 細項</button>
                 </div>
             </div>
             <div class="mixed-list"></div>
@@ -275,24 +326,33 @@
     }
 
     function importSoulFragment(btn) {
-        const raw = prompt("請貼上內容：");
+        const raw = prompt("請貼上內容 (格式：副標題 或項目:內容)：");
         if (!raw) return;
         const lines = raw.split('\n');
+        let isFirstLine = true;
         const card = btn.closest('.category-card');
         const titleInput = card.querySelector('.category-title');
-        let isFirstLine = true;
+
         lines.forEach(line => {
             const clean = line.trim();
             if (!clean) return;
-            if (isFirstLine) {
-                if (!clean.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])/)) {
-                    titleInput.value = clean; isFirstLine = false; return;
+            
+            // 處理第一行是否為標題
+            if (isFirstLine && !clean.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])/)) {
+                if(!clean.includes(':') && !clean.includes('：')){
+                    titleInput.value = clean; 
+                    isFirstLine = false; 
+                    return;
                 }
             }
             isFirstLine = false;
+
+            // 處理副標題樣式 (數字開頭)
             const subMatch = clean.match(/^([一二三四五六七八九十]+[、]|[\d]+[\.．])\s*(.*)/);
             if (subMatch) { addSub(btn, clean); return; }
-            const colMatch = clean.match(/^([^：:，。]{1,30})[：:](.*)/);
+
+            // 處理細項樣式 (Key:Value)
+            const colMatch = clean.match(/^([^：:，。]{1,50})[：:](.*)/);
             if (colMatch && !colMatch[1].endsWith('如')) {
                 newRule(btn, colMatch[1].trim(), colMatch[2].trim());
             } else {
@@ -309,7 +369,7 @@
                 <button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button>
                 <button class="btn-emoji-move" onclick="moveElement(this, 1)">⬇️</button>
             </div>
-            <input type="text" class="subtitle-input" value="${val}">
+            <input type="text" class="subtitle-input" value="${val}" placeholder="副標題內容">
             <button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
@@ -321,11 +381,12 @@
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
 
-    function showScroll() {
+    // --- 生成與下載邏輯 ---
+
+    function generateScrollContent() {
         let t = `# ${document.getElementById('main-title').value}\n\n`;
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i + 1}. ${card.querySelector('.category-title').value}\n`;
-            // 生成卷軸時也根據實際畫面順序遍歷
             card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
                 if (el.classList.contains('subtitle-item')) t += `### ${el.querySelector('.subtitle-input').value}\n`;
                 else t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
@@ -334,12 +395,41 @@
         });
         const v = document.getElementById('version-number').value.padStart(4, '0');
         t += `---\n**版本：V1.${v} (V.Final)**`;
-        document.getElementById('export-display').innerText = t;
-        document.getElementById('export-display').style.display = 'block';
+        return t;
     }
 
-    function copyFinalScroll() { navigator.clipboard.writeText(document.getElementById('export-display').innerText || "請先生成卷軸").then(() => alert("卷軸已複製！")); }
-    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製！")); }
+    function showScroll() {
+        const content = generateScrollContent();
+        const display = document.getElementById('export-display');
+        display.innerText = content;
+        display.style.display = 'block';
+    }
+
+    function copyFinalScroll() { 
+        let content = document.getElementById('export-display').innerText;
+        if(!content || document.getElementById('export-display').style.display === 'none'){
+            content = generateScrollContent(); // 如果沒生成，背景生成來複製
+        }
+        navigator.clipboard.writeText(content).then(() => alert("📜 靈魂卷軸已複製到剪貼簿！")); 
+    }
+
+    // ✨ 新增的下載 TXT 功能 ✨
+    function downloadScrollTXT() {
+        const content = generateScrollContent();
+        const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+        const a = document.createElement('a');
+        const v = document.getElementById('version-number').value.padStart(4, '0');
+        
+        // 檔名加上日期與版本
+        const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
+        a.download = `Soul_Scroll_${date}_V${v}.txt`;
+        
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        URL.revokeObjectURL(a.href); // 釋放記憶體
+    }
+
+    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("📋 JSON 數據已複製！")); }
     function exportToJSON() { 
         const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Soul_Save.json`; a.click(); 
