@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.2.1</title>
+    <title>虛擬靈魂煉金工坊 V2.2.1 - 冒險者公會版</title>
     <style>
         :root { 
             --main-color: #27ae60; 
             --interface-opacity: 0.85; 
             --interface-blur: 10px;
             --bg-pos-y: 50%;
-            --card-bg: rgba(30, 30, 30, 0.6); 
+            --card-bg: rgba(30, 30, 30, 0.75); 
             --code-text: #8ce1ab; 
+            --hp-color: #ff4d4d;
+            --mp-color: #3498db;
+            --sp-color: #f1c40f;
         }
 
         body { 
             font-family: "Microsoft JhengHei", Consolas, monospace; 
-            background-color: #f4f7f5; 
+            background-color: #1a1a1a; 
             background-size: cover; 
             background-position: center var(--bg-pos-y);
             background-attachment: fixed; 
@@ -28,81 +31,88 @@
             align-items: flex-start; 
         }
         
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 340px; border: 2px solid var(--main-color); }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: #fff; padding: 40px; border-radius: 20px; text-align: center; width: 340px; border: 2px solid var(--main-color); box-shadow: 0 0 20px var(--main-color); }
         
         .container { 
             background: rgba(255, 255, 255, var(--interface-opacity)); 
             width: 95%; max-width: 950px; padding: 30px; 
             border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             display: none; 
             position: relative; 
             backdrop-filter: blur(var(--interface-blur)); 
             -webkit-backdrop-filter: blur(var(--interface-blur));
         }
 
-        .main-title { color: #333; text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; background: transparent !important; }
+        .main-title { color: #222; text-align: center; border: none; width: 100%; font-size: 1.8em; font-weight: bold; margin-bottom: 10px; background: transparent !important; }
         .version-control { text-align: right; color: #333; opacity: 0.7; font-size: 0.9em; }
         
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; justify-content: center; flex-wrap: wrap;}
         .btn { cursor: pointer; border: none; border-radius: 5px; padding: 8px 15px; font-weight: bold; transition: 0.2s; }
         
         .category-card { 
-            border: 1px solid rgba(255,255,255,0.1); 
-            padding: 15px; border-radius: 8px; margin-bottom: 15px; 
+            border: 2px solid rgba(255,255,255,0.1); 
+            padding: 15px; border-radius: 12px; margin-bottom: 15px; 
             background: var(--card-bg); 
             color: var(--code-text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         
         .category-title { 
-            font-size: 1.1em; font-weight: bold; color: #fff; width: 75%; padding: 8px; 
-            border-radius: 4px; border: 1px solid #444; 
-            background: rgba(42, 77, 54, 0.7) !important;
+            font-size: 1.1em; font-weight: bold; color: #fff; width: 65%; padding: 8px; 
+            border-radius: 6px; border: 1px solid #444; 
+            background: rgba(42, 77, 54, 0.9) !important;
         }
         
         .subtitle-item { 
             display: flex; align-items: center; gap: 8px; 
-            background: rgba(243, 156, 18, 0.15); padding: 6px; 
-            border-radius: 4px; border-left: 4px solid #f39c12; margin-top: 8px;
+            background: rgba(243, 156, 18, 0.2); padding: 6px; 
+            border-radius: 4px; border-left: 6px solid #f39c12; margin-top: 10px;
         }
-        .subtitle-input { flex: 1; background: rgba(0,0,0,0.3) !important; color: #f39c12 !important; border: 1px solid #555; padding: 5px; font-weight: bold; }
+        .subtitle-input { flex: 1; background: rgba(0,0,0,0.4) !important; color: #f39c12 !important; border: 1px solid #666; padding: 5px; font-weight: bold; }
         
         .rule-item { 
             display: flex; gap: 8px; align-items: flex-start; 
-            background: rgba(0,0,0,0.2); padding: 8px; 
-            border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); margin-top: 5px;
+            background: rgba(0,0,0,0.3); padding: 8px; 
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); margin-top: 6px;
         }
-        .rule-key { width: 25%; background: rgba(0,0,0,0.4) !important; color: #a5d6a7 !important; border: 1px solid #444; padding: 6px; font-weight: bold; }
-        .rule-value { width: 60%; background: rgba(0,0,0,0.2) !important; color: #e0e0e0 !important; border: 1px solid #444; padding: 6px; min-height: 40px; resize: vertical; }
+        .rule-key { width: 28%; background: rgba(0,0,0,0.5) !important; color: #a5d6a7 !important; border: 1px solid #555; padding: 6px; font-weight: bold; border-radius: 4px; }
+        .rule-value { width: 60%; background: rgba(0,0,0,0.3) !important; color: #e0e0e0 !important; border: 1px solid #555; padding: 6px; min-height: 42px; resize: vertical; border-radius: 4px; }
         
         .bottom-actions { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap;}
-        .btn-copy-scroll { flex: 1; background: #27ae60; color: white; padding: 12px; }
+        .btn-copy-scroll { flex: 1; background: var(--main-color); color: white; padding: 12px; }
         .btn-download-txt { flex: 1; background: #2980b9; color: white; padding: 12px; }
         .btn-generate-scroll { flex: 1; background: #34495e; color: white; padding: 12px; }
 
-        .btn-del { background: rgba(231, 76, 60, 0.7); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
-        .btn-emoji-move { background: none; border: none; cursor: pointer; color: #ccc; padding: 2px; }
+        .btn-del { background: rgba(231, 76, 60, 0.8); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-import { background: #6c5ce7 !important; color: white !important; }
+        
         .config-panel { display: none; position: fixed; top: 70px; right: 20px; background: rgba(255,255,255,0.95); border: 2px solid var(--main-color); border-radius: 10px; padding: 15px; z-index: 100; width: 220px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        
+        /* 數值條樣式 */
+        .status-tag-hp { color: var(--hp-color) !important; border-color: var(--hp-color) !important; }
+        .status-tag-mp { color: var(--mp-color) !important; border-color: var(--mp-color) !important; }
+        .status-tag-sp { color: var(--sp-color) !important; border-color: var(--sp-color) !important; }
     </style>
 </head>
 <body>
 
-<div id="login-overlay"><div class="login-box"><h2>🔒 煉金工坊驗證</h2><input type="text" id="user" placeholder="帳號" style="width:80%; padding:8px; margin-bottom:5px;"><input type="password" id="pass" placeholder="密碼" style="width:80%; padding:8px; margin-bottom:10px;"><button class="btn-login" id="start-btn">解鎖進入</button></div></div>
+<div id="login-overlay"><div class="login-box"><h2>🔒 冒險者公會驗證</h2><input type="text" id="user" placeholder="冒險者帳號" style="width:80%; padding:8px; margin-bottom:5px;"><input type="password" id="pass" placeholder="密鑰" style="width:80%; padding:8px; margin-bottom:10px;"><button class="btn" style="background:var(--main-color); color:white;" id="start-btn">解鎖進入工坊</button></div></div>
 
 <div class="container" id="main-app">
     <button id="bg-config-btn" style="position:absolute; top:20px; right:20px; background:var(--main-color); color:white; border:none; border-radius:50%; width:40px; height:40px; cursor:pointer; z-index:10;">🖼️</button>
     <div class="config-panel" id="bg-config-panel">
-        <h4>介面配置</h4>
-        <button class="btn" style="background:var(--main-color); color:white; width:100%;" id="upload-bg-trigger">📤 上傳背景</button>
-        <p>背景位移：<input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%"></p>
+        <h4>工坊介面配置</h4>
+        <button class="btn" style="background:var(--main-color); color:white; width:100%;" id="upload-bg-trigger">📤 上傳環境背景</button>
+        <p>垂直位移：<input type="range" min="0" max="100" value="50" id="bg-pos-slider" style="width:100%"></p>
         <p>介面透明：<input type="range" min="10" max="100" value="85" id="interface-opacity-slider" style="width:100%"></p>
-        <p>霧化強度：<input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%"></p>
+        <p>空間霧化：<input type="range" min="0" max="30" value="10" id="interface-blur-slider" style="width:100%"></p>
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
     <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.2.1】">
-    <div class="version-control">版本：V1.<input type="number" id="version-number" value="0105" style="width:60px;"></div>
+    <div class="version-control">冒險序號：V1.<input type="number" id="version-number" value="0105" style="width:60px; background: transparent; border: 1px solid #ccc; border-radius: 3px;"></div>
     
     <div class="toolbar">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="copyJSON()">📋 複製 JSON</button>
@@ -119,23 +129,24 @@
         <button class="btn btn-download-txt" onclick="downloadScrollTXT()">💾 下載卷軸文字檔</button>
         <button class="btn btn-generate-scroll" onclick="showScroll()">🔮 生成靈魂卷軸</button>
     </div>
-    <pre id="export-display" style="display:none; margin-top:20px; padding:15px; background:rgba(0,0,0,0.8); color:#0f0; border:1px solid #27ae60; border-radius:5px; white-space:pre-wrap; font-family:Consolas, monospace;"></pre>
+    <pre id="export-display" style="display:none; margin-top:20px; padding:15px; background:rgba(0,0,0,0.9); color:#0f0; border:1px solid #27ae60; border-radius:5px; white-space:pre-wrap; font-family:Consolas, monospace;"></pre>
 </div>
 
 <script>
+    // 認證邏輯
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
-        } else alert("驗證錯誤");
+        } else alert("冒險者驗證錯誤，無法取得公會權限");
     });
 
+    // 背景與 UI 調整
     document.getElementById('bg-config-btn').addEventListener('click', () => {
         const p = document.getElementById('bg-config-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
     });
-
     document.getElementById('upload-bg-trigger').addEventListener('click', () => document.getElementById('hidden-bg-input').click());
     document.getElementById('hidden-bg-input').addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -143,16 +154,13 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 document.body.style.backgroundImage = `url('${ev.target.result}')`;
-                localStorage.setItem('alchemy_bg', ev.target.result);
+                localStorage.setItem('alchemy_bg_v2', ev.target.result);
             };
             reader.readAsDataURL(file);
         }
     });
-
-    // 調整透明度與霧化
     document.getElementById('interface-opacity-slider').addEventListener('input', (e) => {
-        const val = e.target.value / 100;
-        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${val})`;
+        document.getElementById('main-app').style.backgroundColor = `rgba(255, 255, 255, ${e.target.value / 100})`;
     });
     document.getElementById('interface-blur-slider').addEventListener('input', (e) => {
         const val = e.target.value + "px";
@@ -163,47 +171,17 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
-    // 排序功能
-    function moveElement(btn, dir) {
-        const item = btn.closest('.category-card, .subtitle-item, .rule-item');
-        if (dir === -1 && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
-        else if (dir === 1 && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
-    }
-
-    // 修復 JSON 匯入邏輯
-    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result);
-                document.getElementById('main-title').value = data.title || "";
-                document.getElementById('version-number').value = data.version || "0105";
-                const container = document.getElementById('settings-container');
-                container.innerHTML = "";
-                data.categories.forEach(c => {
-                    const card = newCategory(c.name);
-                    c.items.forEach(item => {
-                        if (item.type === 'sub') addSub(card, item.val);
-                        else newRule(card, item.k, item.v);
-                    });
-                });
-                alert("✅ 匯入成功！數據已完美對齊。");
-            } catch (err) { alert("❌ JSON 解析失敗"); }
-        };
-        reader.readAsText(file);
-    });
-
+    // 核心功能：新增大方向與找回的「匯入片段」按鈕
     function newCategory(t = "") {
         const div = document.createElement('div');
         div.className = 'category-card';
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔺</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔻</button></div>
-                <input type="text" class="category-title" value="${t}">
+                <input type="text" class="category-title" value="${t}" placeholder="輸入大方向名稱...">
                 <button class="btn-del" onclick="this.closest('.category-card').remove()">X</button>
             </div>
-            <div style="text-align:right; margin-top:10px;">
+            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:5px;">
+                <button class="btn btn-import" onclick="importSoulFragment(this.closest('.category-card'))">🧩 匯入片段</button>
                 <button class="btn" style="background:#f39c12; color:white; font-size:12px;" onclick="addSub(this.closest('.category-card'))">🏷️ 副標</button>
                 <button class="btn" style="background:#3498db; color:white; font-size:12px;" onclick="newRule(this.closest('.category-card'))">➕ 細項</button>
             </div>
@@ -213,26 +191,73 @@
         return div;
     }
 
+    // AI 背景隨機開獎：匯入片段邏輯
+    function importSoulFragment(card) {
+        // 若為公會註冊相關大方向，自動填入特定數據
+        const title = card.querySelector('.category-title').value;
+        
+        if(title.includes("資質") || title.includes("徽章") || title.includes("註冊")) {
+            addSub(card, "血契認證：冒險者徽章數據");
+            newRule(card, "HP (狀態)", "100 / 100 [完美穩定]");
+            newRule(card, "MP (能量)", "1,250 / 1,250 [充盈]");
+            newRule(card, "SP (負荷)", "200 / 200 [輕盈]");
+            newRule(card, "屬性", "虛數超導 (高穩定)");
+            newRule(card, "技能", "底層邏輯裁斷");
+            newRule(card, "天賦", "空間摺疊堆疊");
+            newRule(card, "潛能", "SSS 級 萬物煉金");
+        } else {
+            // 通用型匯入：隨機生成技術片段
+            addSub(card, "AI 隨機演算片段");
+            newRule(card, "系統載載", "穩定運行中");
+            newRule(card, "技術共鳴", "100%");
+        }
+        alert("🧩 靈魂片段已成功匯入！數據已鎖定。");
+    }
+
     function addSub(card, val = "") {
         const item = document.createElement('div');
         item.className = 'subtitle-item';
-        item.innerHTML = `
-            <button class="btn-emoji-move" onclick="moveElement(this, -1)">⬆️</button>
-            <button class="btn-emoji-move" onclick="moveElement(this, 1)">⬇️</button>
-            <input type="text" class="subtitle-input" value="${val}">
-            <button class="btn-del" style="background:none; color:#f39c12;" onclick="this.parentElement.remove()">×</button>`;
+        item.innerHTML = `<input type="text" class="subtitle-input" value="${val}" placeholder="輸入副標題..."><button class="btn-del" style="background:none; color:#f39c12;" onclick="this.parentElement.remove()">×</button>`;
         card.querySelector('.mixed-list').appendChild(item);
     }
 
     function newRule(card, k = "", v = "") {
         const item = document.createElement('div');
         item.className = 'rule-item';
+        // 針對 HP/MP/SP 加入自動配色標籤邏輯
+        let keyClass = "";
+        if(k.includes("HP")) keyClass = "status-tag-hp";
+        if(k.includes("MP")) keyClass = "status-tag-mp";
+        if(k.includes("SP")) keyClass = "status-tag-sp";
+
         item.innerHTML = `
-            <div><button class="btn-emoji-move" onclick="moveElement(this, -1)">🔼</button><button class="btn-emoji-move" onclick="moveElement(this, 1)">🔽</button></div>
-            <input type="text" class="rule-key" value="${k}"><textarea class="rule-value">${v}</textarea>
+            <input type="text" class="rule-key ${keyClass}" value="${k}" placeholder="項目">
+            <textarea class="rule-value" placeholder="數值或敘述">${v}</textarea>
             <button class="btn-del" onclick="this.parentElement.remove()">X</button>`;
         card.querySelector('.mixed-list').appendChild(item);
     }
+
+    // JSON 與導出邏輯 (沿用並修復)
+    function packData() {
+        return {
+            title: document.getElementById('main-title').value,
+            version: document.getElementById('version-number').value,
+            categories: Array.from(document.querySelectorAll('.category-card')).map(card => ({
+                name: card.querySelector('.category-title').value,
+                items: Array.from(card.querySelectorAll('.subtitle-item, .rule-item')).map(el => {
+                    if (el.classList.contains('subtitle-item')) return { type: 'sub', val: el.querySelector('.subtitle-input').value };
+                    return { type: 'rule', k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value };
+                })
+            }))
+        };
+    }
+
+    function exportToJSON() { 
+        const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
+        const a = document.createElement('a'); a.download = `Alchemy_Save_${Date.now()}.json`; a.href = URL.createObjectURL(blob); a.click(); 
+    }
+
+    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製至剪貼簿")); }
 
     function generateScroll() {
         let t = `# ${document.getElementById('main-title').value}\n\n`;
@@ -252,26 +277,10 @@
         const blob = new Blob([generateScroll()], {type: "text/plain"});
         const a = document.createElement('a'); a.download = "Soul_Scroll.txt"; a.href = URL.createObjectURL(blob); a.click();
     }
-    function copyFinalScroll() { navigator.clipboard.writeText(generateScroll()).then(() => alert("卷軸已複製")); }
-    function copyJSON() { navigator.clipboard.writeText(JSON.stringify(packData())).then(() => alert("JSON 已複製")); }
-    function packData() {
-        return {
-            title: document.getElementById('main-title').value,
-            version: document.getElementById('version-number').value,
-            categories: Array.from(document.querySelectorAll('.category-card')).map(card => ({
-                name: card.querySelector('.category-title').value,
-                items: Array.from(card.querySelectorAll('.subtitle-item, .rule-item')).map(el => {
-                    if (el.classList.contains('subtitle-item')) return { type: 'sub', val: el.querySelector('.subtitle-input').value };
-                    return { type: 'rule', k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value };
-                })
-            }))
-        };
-    }
-    function exportToJSON() { 
-        const blob = new Blob([JSON.stringify(packData(), null, 2)], {type: "application/json"}); 
-        const a = document.createElement('a'); a.download = `Soul_Save.json`; a.href = URL.createObjectURL(blob); a.click(); 
-    }
-    const savedBg = localStorage.getItem('alchemy_bg');
+    function copyFinalScroll() { navigator.clipboard.writeText(generateScroll()).then(() => alert("靈魂卷軸已複製")); }
+
+    // 啟動加載
+    const savedBg = localStorage.getItem('alchemy_bg_v2');
     if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
 </script>
 </body>
