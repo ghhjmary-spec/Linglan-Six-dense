@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虛擬靈魂煉金工坊 V2.1.6</title>
+    <title>虛擬靈魂煉金工坊 V2.1.7</title>
     <style>
         :root { 
             --main-color: #4a7c59; 
@@ -114,7 +114,7 @@
     </div>
     <input type="file" id="hidden-bg-input" style="display:none;" accept="image/*">
 
-    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.6】">
+    <input type="text" id="main-title" class="main-title" value="【虛擬靈魂煉金工坊：V2.1.7】">
     <div class="version-control">版本：V1.<input type="number" id="version-number" value="0104"></div>
     
     <div class="toolbar">
@@ -135,6 +135,7 @@
 </div>
 
 <script>
+    // --- 基礎驗證與 UI 控制 ---
     const _0xAuth = ["Z2hoam1hcnk=", "d0VKVEhKNDlGMDUwOA=="]; 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (btoa(document.getElementById('user').value) === _0xAuth[0] && btoa(document.getElementById('pass').value) === _0xAuth[1]) {
@@ -156,7 +157,7 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 document.body.style.backgroundImage = `url('${ev.target.result}')`;
-                localStorage.setItem('alchemy_bg', ev.target.result);
+                localStorage.setItem('alchemy_bg', event.target.result);
             };
             reader.readAsDataURL(file);
         }
@@ -179,6 +180,8 @@
         document.body.style.backgroundPositionY = e.target.value + "%";
     });
 
+    // --- 關鍵修復：存檔與讀取邏輯 ---
+
     document.getElementById('import-json-trigger').addEventListener('click', () => document.getElementById('hidden-file-input').click());
     document.getElementById('hidden-file-input').addEventListener('change', (e) => {
         const file = e.target.files[0]; if (!file) return;
@@ -198,15 +201,49 @@
         document.getElementById('version-number').value = data.version || "0104";
         const container = document.getElementById('settings-container');
         container.innerHTML = "";
+        
         if (data.categories) {
             data.categories.forEach(c => {
                 const card = newCategory(c.name);
                 const addBtn = card.querySelector('.btn');
-                if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
-                if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
+                
+                // 修正：支援新舊格式。新格式存放在 c.items 中以維持順序
+                if (c.items) {
+                    c.items.forEach(item => {
+                        if (item.type === 'sub') addSub(addBtn, item.val);
+                        else if (item.type === 'rule') newRule(addBtn, item.k, item.v);
+                    });
+                } else {
+                    // 相容舊存檔格式
+                    if (c.subtitles) c.subtitles.forEach(s => addSub(addBtn, s));
+                    if (c.rules) c.rules.forEach(r => newRule(addBtn, r.k, r.v));
+                }
             });
         }
     }
+
+    function packData() {
+        return {
+            title: document.getElementById('main-title').value,
+            version: document.getElementById('version-number').value,
+            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
+                // 核心修復：抓取所有 item 並按照順序存檔
+                const items = Array.from(card.querySelectorAll('.subtitle-item, .rule-item')).map(el => {
+                    if (el.classList.contains('subtitle-item')) {
+                        return { type: 'sub', val: el.querySelector('.subtitle-input').value };
+                    } else {
+                        return { type: 'rule', k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value };
+                    }
+                });
+                return { 
+                    name: card.querySelector('.category-title').value, 
+                    items: items // 新增順序紀錄欄位
+                };
+            })
+        };
+    }
+
+    // --- 基礎組件邏輯 ---
 
     function moveElement(btn, dir) {
         const item = btn.closest('.category-card, .subtitle-item, .rule-item');
@@ -264,7 +301,6 @@
         });
     }
 
-    // --- 關鍵修正處：補齊副標題的向下移動鍵 ---
     function addSub(btn, val = "") {
         const item = document.createElement('div');
         item.className = 'subtitle-item';
@@ -285,26 +321,11 @@
         btn.closest('.category-card').querySelector('.mixed-list').appendChild(item);
     }
 
-    function packData() {
-        return {
-            title: document.getElementById('main-title').value,
-            version: document.getElementById('version-number').value,
-            categories: Array.from(document.querySelectorAll('.category-card')).map(card => {
-                const mixed = Array.from(card.querySelectorAll('.subtitle-item, .rule-item'));
-                const subs = []; const rules = [];
-                mixed.forEach(el => {
-                    if (el.classList.contains('subtitle-item')) subs.push(el.querySelector('.subtitle-input').value);
-                    else rules.push({ k: el.querySelector('.rule-key').value, v: el.querySelector('.rule-value').value });
-                });
-                return { name: card.querySelector('.category-title').value, subtitles: subs, rules: rules };
-            })
-        };
-    }
-
     function showScroll() {
         let t = `# ${document.getElementById('main-title').value}\n\n`;
         document.querySelectorAll('.category-card').forEach((card, i) => {
             t += `## ${i + 1}. ${card.querySelector('.category-title').value}\n`;
+            // 生成卷軸時也根據實際畫面順序遍歷
             card.querySelectorAll('.subtitle-item, .rule-item').forEach(el => {
                 if (el.classList.contains('subtitle-item')) t += `### ${el.querySelector('.subtitle-input').value}\n`;
                 else t += `- **【${el.querySelector('.rule-key').value}】：** ${el.querySelector('.rule-value').value}\n`;
